@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Pendientes DDG</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Archivo+Narrow:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #edf0f4;
+        --bg-panel: #ffffff;
+        --surface: #ffffff;
+        --surface-2: #e3e8ef;
+        --ink: #131a22;
+        --ink-2: #4d5b6a;
+        --ink-3: #7c8a99;
+        --line: #d3dbe4;
+        --brand: #d99a2b;
+        --brand-ink: #6e4c04;
+        --alta: #cf222e;
+        --alta-bg: #fdecec;
+        --alta-ink: #8f1219;
+        --media: #d97706;
+        --media-bg: #fdf0dc;
+        --media-ink: #8a4b02;
+        --baja: #1e8a57;
+        --baja-bg: #e2f4ea;
+        --baja-ink: #0f5c39;
+        --overdue-bg: #fdecec;
+        --shadow: 0 1px 2px rgba(16, 24, 36, .06), 0 8px 24px rgba(16, 24, 36, .07);
+        --radius: 14px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --bg: #0d1116;
+          --bg-panel: #151b22;
+          --surface: #171e26;
+          --surface-2: #212b36;
+          --ink: #edf2f7;
+          --ink-2: #a5b4c4;
+          --ink-3: #71828f;
+          --line: #2a3644;
+          --brand: #e5aa3c;
+          --brand-ink: #f3cd85;
+          --alta: #ff6b63;
+          --alta-bg: #3d1f1f;
+          --alta-ink: #ffb3ad;
+          --media: #f5a83d;
+          --media-bg: #3d2d12;
+          --media-ink: #ffd08f;
+          --baja: #3ecf8e;
+          --baja-bg: #143327;
+          --baja-ink: #8fe6bd;
+          --overdue-bg: #3d1f1f;
+          --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+        line-height: 1.45;
+      }
+      button, input, textarea, select { font: inherit; color: inherit; }
+      button { cursor: pointer; }
+      button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible {
+        outline: 3px solid var(--brand);
+        outline-offset: 2px;
+      }
+      [hidden] { display: none !important; }
+
+      /* ---------- Top bar ---------- */
+      .topbar {
+        position: sticky; top: 0; z-index: 20;
+        background: var(--bg-panel);
+        border-bottom: 1px solid var(--line);
+      }
+      .topbar-in {
+        max-width: 1440px; margin: 0 auto;
+        padding: 14px 20px;
+        display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      }
+      .brand { flex: 1 1 auto; min-width: 220px; }
+      .brand h1 {
+        margin: 0; font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+        font-weight: 900; letter-spacing: -.02em; line-height: 1.1;
+      }
+      .brand h1 .dot { color: var(--brand); }
+      .clockline {
+        margin: 3px 0 0; color: var(--ink-2); font-size: .95rem; font-weight: 600;
+        font-variant-numeric: tabular-nums; text-transform: capitalize;
+      }
+      .clockline #clock { color: var(--ink); font-weight: 800; }
+      .viewswitch {
+        display: flex; background: var(--surface-2); border-radius: 999px; padding: 4px; gap: 4px;
+      }
+      .vs-btn {
+        border: 0; background: transparent; color: var(--ink-2);
+        padding: 10px 20px; border-radius: 999px; font-weight: 700; font-size: .95rem;
+        min-height: 44px; display: inline-flex; align-items: center; gap: 8px;
+      }
+      .vs-btn svg { width: 17px; height: 17px; flex: none; }
+      .vs-btn.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+      .vs-btn .lockdot { width: 8px; height: 8px; border-radius: 50%; background: var(--baja); }
+
+      main { max-width: 1440px; margin: 0 auto; padding: 22px 20px 56px; }
+
+      /* ---------- Stats ---------- */
+      .stats {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;
+      }
+      .stat {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 14px 18px; box-shadow: var(--shadow);
+      }
+      .stat .num { font-size: clamp(1.7rem, 3.4vw, 2.4rem); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+      .stat .lbl { margin-top: 5px; color: var(--ink-2); font-weight: 600; font-size: .9rem; }
+      .stat.alert .num { color: var(--alta); }
+      .stat.today .num { color: var(--media); }
+
+      /* ---------- Board (exposición) ---------- */
+      .board {
+        display: grid; gap: 14px;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        align-items: start;
+      }
+      .card {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: var(--shadow); padding: 18px 20px 16px; position: relative; overflow: hidden;
+      }
+      .card::before {
+        content: ""; position: absolute; inset: 0 auto 0 0; width: 6px;
+        background: var(--baja);
+      }
+      .card.u-alta::before { background: var(--alta); }
+      .card.u-media::before { background: var(--media); }
+      .card.u-baja::before { background: var(--baja); }
+      .card.is-overdue { background: var(--overdue-bg); border-color: var(--alta); }
+      .card-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+      .pill {
+        font-family: "Archivo Narrow", "Archivo", sans-serif;
+        font-weight: 700; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase;
+        padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+      }
+      .pill.alta { background: var(--alta-bg); color: var(--alta-ink); }
+      .pill.media { background: var(--media-bg); color: var(--media-ink); }
+      .pill.baja { background: var(--baja-bg); color: var(--baja-ink); }
+      .due-chip {
+        margin-left: auto; font-weight: 700; font-size: .88rem; color: var(--ink-2);
+        font-variant-numeric: tabular-nums; white-space: nowrap;
+      }
+      .due-chip.overdue { color: var(--alta); font-weight: 800; }
+      .due-chip.today { color: var(--media-ink); font-weight: 800; }
+      .card h3 { margin: 0; font-size: 1.28rem; font-weight: 800; line-height: 1.25; letter-spacing: -.01em; }
+      .card .note { margin: 8px 0 0; color: var(--ink-2); font-size: .98rem; overflow-wrap: anywhere; }
+      .card .duedate { margin: 12px 0 0; color: var(--ink-3); font-size: .88rem; font-weight: 600; }
+      .expo-foot { margin: 22px 2px 0; color: var(--ink-3); font-weight: 600; font-size: .95rem; }
+
+      .empty {
+        background: var(--surface); border: 1.5px dashed var(--line); border-radius: var(--radius);
+        padding: 44px 24px; text-align: center; color: var(--ink-2);
+      }
+      .empty strong { display: block; color: var(--ink); font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; }
+
+      /* ---------- PIN gate ---------- */
+      .gate-wrap { max-width: 380px; margin: 30px auto 0; }
+      .gate {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+        box-shadow: var(--shadow); padding: 28px 26px 24px; text-align: center;
+      }
+      .gate h2 { margin: 0 0 6px; font-size: 1.3rem; font-weight: 800; }
+      .gate p { margin: 0 0 18px; color: var(--ink-2); font-size: .95rem; }
+      .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; min-height: 18px; }
+      .pin-dots span { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink-3); }
+      .pin-dots span.on { background: var(--brand); border-color: var(--brand); }
+      .gate.error .pin-dots span { border-color: var(--alta); background: var(--alta-bg); }
+      .gate-msg { min-height: 1.3em; color: var(--alta); font-weight: 700; font-size: .92rem; margin: 0 0 10px; }
+      .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .keypad button {
+        min-height: 56px; border-radius: 12px; border: 1px solid var(--line);
+        background: var(--surface-2); font-size: 1.3rem; font-weight: 800;
+      }
+      .keypad button:active { background: var(--brand); color: #161006; }
+      .keypad button.fn { font-size: .95rem; font-weight: 700; color: var(--ink-2); }
+      .gate-hint { margin: 16px 0 0; color: var(--ink-3); font-size: .88rem; }
+      .gate-hint code { font-weight: 800; color: var(--ink-2); }
+      @keyframes shake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(3px); } 30%, 50%, 70% { transform: translateX(-5px); } 40%, 60% { transform: translateX(5px); } }
+      .gate.shake { animation: shake .45s ease both; }
+      @media (prefers-reduced-motion: reduce) { .gate.shake { animation: none; } }
+
+      /* ---------- Admin ---------- */
+      .admin-grid { display: grid; grid-template-columns: 400px 1fr; gap: 18px; align-items: start; }
+      .panel {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: var(--shadow); padding: 20px;
+      }
+      .panel h2 { margin: 0 0 14px; font-size: 1.12rem; font-weight: 800; }
+      .field { margin-bottom: 14px; }
+      .field label { display: block; font-weight: 700; font-size: .9rem; margin-bottom: 6px; }
+      .field input[type="text"], .field input[type="date"], .field textarea {
+        width: 100%; border: 1.5px solid var(--line); border-radius: 10px;
+        background: var(--bg-panel); padding: 11px 12px; min-height: 46px;
+      }
+      .field textarea { min-height: 74px; resize: vertical; }
+      .urg-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .urg-picker button {
+        min-height: 46px; border-radius: 10px; border: 1.5px solid var(--line);
+        background: var(--bg-panel); font-weight: 800; font-size: .92rem;
+        display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      }
+      .urg-picker button .sw { width: 11px; height: 11px; border-radius: 50%; }
+      .urg-picker button[data-u="alta"] .sw { background: var(--alta); }
+      .urg-picker button[data-u="media"] .sw { background: var(--media); }
+      .urg-picker button[data-u="baja"] .sw { background: var(--baja); }
+      .urg-picker button.sel[data-u="alta"] { background: var(--alta-bg); border-color: var(--alta); color: var(--alta-ink); }
+      .urg-picker button.sel[data-u="media"] { background: var(--media-bg); border-color: var(--media); color: var(--media-ink); }
+      .urg-picker button.sel[data-u="baja"] { background: var(--baja-bg); border-color: var(--baja); color: var(--baja-ink); }
+      .form-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      .btn {
+        min-height: 46px; padding: 10px 18px; border-radius: 10px; border: 1.5px solid var(--line);
+        background: var(--surface-2); font-weight: 800; font-size: .95rem;
+        display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+      }
+      .btn.primary { background: var(--brand); border-color: var(--brand); color: #1c1304; flex: 1 1 auto; }
+      .btn.primary:hover { filter: brightness(1.06); }
+      .btn.danger { color: var(--alta); border-color: var(--alta); background: transparent; }
+      .btn.small { min-height: 40px; padding: 7px 13px; font-size: .88rem; border-radius: 9px; }
+      .btn.ghost { background: transparent; }
+
+      .tools { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+      .scope-note {
+        margin: 0 0 16px; color: var(--ink-2); font-size: .9rem;
+        background: var(--surface-2); border-radius: 10px; padding: 11px 13px;
+      }
+      .scope-note strong { color: var(--ink); }
+      .pin-change { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; margin-top: 4px; }
+      .pin-change .field { margin: 0; flex: 1 1 140px; }
+      .pin-change input {
+        width: 100%; border: 1.5px solid var(--line); border-radius: 10px;
+        background: var(--bg-panel); padding: 10px 12px; min-height: 44px; letter-spacing: .3em;
+      }
+
+      .admin-list { display: flex; flex-direction: column; gap: 10px; }
+      .row {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+        box-shadow: var(--shadow); padding: 13px 15px;
+        display: flex; gap: 12px; align-items: flex-start;
+      }
+      .row .sw { width: 12px; height: 12px; border-radius: 50%; margin-top: 6px; flex: none; }
+      .row .sw.alta { background: var(--alta); } .row .sw.media { background: var(--media); } .row .sw.baja { background: var(--baja); }
+      .row .body { flex: 1 1 auto; min-width: 0; }
+      .row .t { font-weight: 800; font-size: 1.02rem; overflow-wrap: anywhere; }
+      .row .meta { color: var(--ink-2); font-size: .88rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+      .row .meta .over { color: var(--alta); font-weight: 800; }
+      .row .meta .today { color: var(--media-ink); font-weight: 800; }
+      .row.done { opacity: .62; }
+      .row.done .t { text-decoration: line-through; }
+      .row .acts { display: flex; gap: 6px; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+      .icon-btn {
+        min-width: 40px; min-height: 40px; border-radius: 9px; border: 1.5px solid var(--line);
+        background: var(--bg-panel); font-weight: 700; font-size: .85rem; padding: 6px 10px;
+      }
+      .icon-btn.done-btn { color: var(--baja-ink); border-color: var(--baja); }
+      .icon-btn.del { color: var(--alta); }
+      .icon-btn.del.confirm { background: var(--alta); border-color: var(--alta); color: #fff; }
+      .list-head { display: flex; align-items: baseline; gap: 10px; margin: 2px 2px 12px; }
+      .list-head h2 { margin: 0; font-size: 1.12rem; font-weight: 800; }
+      .list-head span { color: var(--ink-3); font-weight: 600; font-size: .9rem; }
+
+      /* ---------- Toast ---------- */
+      #toast {
+        position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 16px);
+        background: var(--ink); color: var(--bg); font-weight: 700; font-size: .95rem;
+        padding: 12px 20px; border-radius: 999px; box-shadow: var(--shadow);
+        opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+        max-width: calc(100vw - 32px); text-align: center; z-index: 50;
+      }
+      #toast.show { opacity: 1; transform: translate(-50%, 0); }
+      @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+
+      /* ---------- Responsive ---------- */
+      @media (max-width: 900px) {
+        .admin-grid { grid-template-columns: 1fr; }
+        .stats { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 560px) {
+        main { padding: 16px 12px 44px; }
+        .topbar-in { padding: 12px; }
+        .brand { min-width: 0; }
+        .viewswitch { width: 100%; }
+        .vs-btn { flex: 1 1 0; justify-content: center; padding: 10px 8px; }
+        .board { grid-template-columns: 1fr; }
+        .row { flex-wrap: wrap; }
+        .row .acts { width: 100%; justify-content: flex-start; padding-left: 24px; }
+      }
+      /* TV / pantalla grande: tarjetas más legibles a distancia */
+      @media (min-width: 1600px) {
+        .board { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
+        .card h3 { font-size: 1.55rem; }
+        .card .note { font-size: 1.1rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-in">
+        <div class="brand">
+          <h1>Pendientes DDG<span class="dot">.</span></h1>
+          <p class="clockline"><span id="clock">--:--</span> · <span id="dateline">—</span></p>
+        </div>
+        <nav class="viewswitch" aria-label="Cambiar vista">
+          <button class="vs-btn active" id="btnExpo" type="button" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            Exposición
+          </button>
+          <button class="vs-btn" id="btnAdmin" type="button" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            Administrador
+            <span class="lockdot" id="lockDot" hidden title="Sesión de administrador activa"></span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- ================= EXPOSICIÓN ================= -->
+      <section id="viewExpo" aria-label="Pendientes DDG">
+        <div class="stats" id="stats">
+          <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">Pendientes activos</div></div>
+          <div class="stat alert"><div class="num" id="stOver">0</div><div class="lbl">Vencidos</div></div>
+          <div class="stat today"><div class="num" id="stToday">0</div><div class="lbl">Vencen hoy</div></div>
+          <div class="stat"><div class="num" id="stDone">0</div><div class="lbl">Completados</div></div>
+        </div>
+        <div class="board" id="board"></div>
+        <div class="empty" id="expoEmpty" hidden>
+          <strong>Sin pendientes activos</strong>
+          El tablero está al corriente. Los nuevos pendientes aparecen aquí en cuanto el administrador los agregue.
+        </div>
+        <p class="expo-foot" id="expoFoot"></p>
+      </section>
+
+      <!-- ================= ADMINISTRADOR ================= -->
+      <section id="viewAdmin" aria-label="Panel del administrador" hidden>
+        <!-- Puerta con PIN -->
+        <div class="gate-wrap" id="pinGate">
+          <div class="gate" id="gateCard">
+            <h2>Acceso de administrador</h2>
+            <p>Ingresa el PIN de 4 dígitos para agregar y editar pendientes. La vista de exposición no necesita PIN.</p>
+            <div class="pin-dots" id="pinDots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+            <p class="gate-msg" id="gateMsg" role="alert"></p>
+            <div class="keypad" id="keypad">
+              <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+              <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+              <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+              <button type="button" class="fn" data-k="clear">Borrar</button><button type="button" data-k="0">0</button><button type="button" class="fn" data-k="back" aria-label="Borrar último dígito"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z"/><path d="m12 9.5 5 5M17 9.5l-5 5"/></svg></button>
+            </div>
+            <p class="gate-hint">PIN inicial de la demostración: <code>1234</code> — cámbialo desde el panel una vez dentro.</p>
+          </div>
+        </div>
+
+        <!-- Panel -->
+        <div id="adminPanel" hidden>
+          <div class="admin-grid">
+            <div>
+              <form class="panel" id="taskForm" autocomplete="off">
+                <h2 id="formTitle">Nuevo pendiente</h2>
+                <div class="field">
+                  <label for="fTitle">Título</label>
+                  <input type="text" id="fTitle" required maxlength="90" placeholder="Ej. Entregar reporte de la semana" />
+                </div>
+                <div class="field">
+                  <label for="fNote">Detalle <span style="color:var(--ink-3);font-weight:600">(opcional)</span></label>
+                  <textarea id="fNote" maxlength="220" placeholder="Notas, responsable, lugar…"></textarea>
+                </div>
+                <div class="field">
+                  <label>Urgencia</label>
+                  <div class="urg-picker" id="urgPicker" role="group" aria-label="Urgencia">
+                    <button type="button" data-u="alta"><span class="sw"></span>Alta</button>
+                    <button type="button" data-u="media" class="sel"><span class="sw"></span>Media</button>
+                    <button type="button" data-u="baja"><span class="sw"></span>Baja</button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="fDue">Fecha límite <span style="color:var(--ink-3);font-weight:600">(opcional)</span></label>
+                  <input type="date" id="fDue" />
+                </div>
+                <div class="form-actions">
+                  <button class="btn primary" type="submit" id="submitBtn">Agregar al tablero</button>
+                  <button class="btn ghost" type="button" id="cancelEdit" hidden>Cancelar</button>
+                </div>
+              </form>
+
+              <div class="panel" style="margin-top:18px">
+                <h2>Tablero y dispositivos</h2>
+                <p class="scope-note">Este prototipo guarda los cambios <strong>solo en esta pestaña</strong>. Para compartir el mismo tablero entre varios dispositivos (el plan de GitHub Pages), <strong>exporta</strong> el archivo <strong>pendientes.json</strong> y súbelo a tu repositorio; en cada dispositivo usa <strong>Importar</strong> para cargarlo.</p>
+                <div class="tools">
+                  <button class="btn small" type="button" id="btnExport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6.5 10.5 12 16l5.5-5.5M4 20h16"/></svg> Exportar JSON</button>
+                  <button class="btn small" type="button" id="btnImport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M6.5 7.5 12 2l5.5 5.5M4 20h16"/></svg> Importar JSON</button>
+                  <input type="file" id="fileImport" accept="application/json,.json" hidden />
+                  <button class="btn small" type="button" id="btnClearExamples" hidden>Quitar ejemplos</button>
+                  <button class="btn small danger" type="button" id="btnWipe">Vaciar tablero</button>
+                  <button class="btn small" type="button" id="btnLock">Bloquear panel</button>
+                </div>
+                <form class="pin-change" id="pinForm" autocomplete="off">
+                  <div class="field">
+                    <label for="newPin">Cambiar PIN (4 dígitos)</label>
+                    <input id="newPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" />
+                  </div>
+                  <button class="btn small" type="submit">Guardar PIN</button>
+                </form>
+              </div>
+            </div>
+
+            <div>
+              <div class="list-head"><h2>Pendientes</h2><span id="listCount"></span></div>
+              <div class="admin-list" id="adminList"></div>
+              <div class="empty" id="adminEmpty" hidden>
+                <strong>El tablero está vacío</strong>
+                Agrega el primer pendiente con el formulario.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      "use strict";
+
+      /* ---------- Utilidades de fecha ---------- */
+      var DAY = 86400000;
+      function startOfToday() { var d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+      function toISODate(d) {
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return d.getFullYear() + "-" + m + "-" + day;
+      }
+      function offsetISO(n) { var d = startOfToday(); d.setDate(d.getDate() + n); return toISODate(d); }
+      function parseISO(s) {
+        if (!s) return null;
+        var p = s.split("-");
+        return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+      }
+      var MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+      var DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+      function fmtDate(iso) {
+        var d = parseISO(iso); if (!d) return "";
+        return DIAS[d.getDay()] + " " + d.getDate() + " " + MESES[d.getMonth()] + " " + d.getFullYear();
+      }
+      function dueInfo(iso) {
+        if (!iso) return { label: "Sin fecha límite", cls: "", days: null };
+        var diff = Math.round((parseISO(iso) - startOfToday()) / DAY);
+        if (diff < 0) return { label: diff === -1 ? "Vencido · ayer" : "Vencido · hace " + (-diff) + " días", cls: "overdue", days: diff };
+        if (diff === 0) return { label: "Vence hoy", cls: "today", days: 0 };
+        if (diff === 1) return { label: "Vence mañana", cls: "", days: 1 };
+        return { label: "Vence en " + diff + " días", cls: "", days: diff };
+      }
+      function esc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      }
+
+      /* ---------- Estado (solo en memoria, esta pestaña) ---------- */
+      var URG = { alta: 0, media: 1, baja: 2 };
+      var URG_LABEL = { alta: "Alta", media: "Media", baja: "Baja" };
+      var seq = 0;
+      function mk(title, note, urgency, due, done, example) {
+        seq += 1;
+        return { id: "t" + seq, title: title, note: note || "", urgency: urgency, due: due || null, done: !!done, example: !!example };
+      }
+      var tasks = [
+        mk("Entregar el reporte semanal al jefe de departamento", "Formato PDF, con las firmas escaneadas.", "alta", offsetISO(-1), false, true),
+        mk("Enviar la cotización del material de impresión", "El proveedor espera respuesta antes del cierre.", "alta", offsetISO(0), false, true),
+        mk("Actualizar el inventario de la bodega", "Contar rollos, tintas y viniles.", "media", offsetISO(1), false, true),
+        mk("Agendar mantenimiento de la impresora grande", "Llamar al técnico y confirmar la visita.", "media", offsetISO(4), false, true),
+        mk("Ordenar el archivo de proyectos del semestre", "Separar por cliente y etiquetar las carpetas.", "baja", offsetISO(9), false, true),
+        mk("Imprimir los formatos de registro", "", "baja", offsetISO(-2), true, true)
+      ];
+      var adminPin = "1234";
+      var unlocked = false;
+      var editingId = null;
+      var formUrgency = "media";
+
+      /* ---------- Reloj ---------- */
+      function tickClock() {
+        var now = new Date();
+        var hh = String(now.getHours()).padStart(2, "0");
+        var mm = String(now.getMinutes()).padStart(2, "0");
+        var ss = String(now.getSeconds()).padStart(2, "0");
+        document.getElementById("clock").textContent = hh + ":" + mm + ":" + ss;
+        document.getElementById("dateline").textContent =
+          DIAS[now.getDay()] + " " + now.getDate() + " de " + ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][now.getMonth()] + " de " + now.getFullYear();
+      }
+      tickClock();
+      setInterval(tickClock, 1000);
+
+      /* ---------- Toast ---------- */
+      var toastTimer = null;
+      function toast(msg) {
+        var el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { el.classList.remove("show"); }, 2600);
+      }
+
+      /* ---------- Orden ---------- */
+      function sortTasks(list) {
+        return list.slice().sort(function (a, b) {
+          if (a.done !== b.done) return a.done ? 1 : -1;
+          var da = dueInfo(a.due), db = dueInfo(b.due);
+          var oa = da.days !== null && da.days < 0 ? 0 : 1;
+          var ob = db.days !== null && db.days < 0 ? 0 : 1;
+          if (oa !== ob) return oa - ob;
+          if (URG[a.urgency] !== URG[b.urgency]) return URG[a.urgency] - URG[b.urgency];
+          var ta = a.due ? parseISO(a.due).getTime() : Infinity;
+          var tb = b.due ? parseISO(b.due).getTime() : Infinity;
+          return ta - tb;
+        });
+      }
+
+      /* ---------- Render: Exposición ---------- */
+      function renderExpo() {
+        var active = tasks.filter(function (t) { return !t.done; });
+        var done = tasks.filter(function (t) { return t.done; });
+        var over = active.filter(function (t) { var d = dueInfo(t.due); return d.days !== null && d.days < 0; }).length;
+        var today = active.filter(function (t) { return dueInfo(t.due).days === 0; }).length;
+        document.getElementById("stTotal").textContent = active.length;
+        document.getElementById("stOver").textContent = over;
+        document.getElementById("stToday").textContent = today;
+        document.getElementById("stDone").textContent = done.length;
+
+        var board = document.getElementById("board");
+        var sorted = sortTasks(active);
+        board.innerHTML = sorted.map(function (t) {
+          var di = dueInfo(t.due);
+          var overdue = di.days !== null && di.days < 0;
+          return '<article class="card u-' + t.urgency + (overdue ? " is-overdue" : "") + '">' +
+            '<div class="card-top">' +
+              '<span class="pill ' + t.urgency + '">Urgencia ' + URG_LABEL[t.urgency] + "</span>" +
+              '<span class="due-chip ' + di.cls + '">' + esc(di.label) + "</span>" +
+            "</div>" +
+            "<h3>" + esc(t.title) + "</h3>" +
+            (t.note ? '<p class="note">' + esc(t.note) + "</p>" : "") +
+            (t.due ? '<p class="duedate">Fecha límite: ' + esc(fmtDate(t.due)) + "</p>" : "") +
+          "</article>";
+        }).join("");
+        document.getElementById("expoEmpty").hidden = sorted.length > 0;
+        document.getElementById("expoFoot").textContent = done.length
+          ? done.length + (done.length === 1 ? " pendiente completado" : " pendientes completados") + " · Actualizado " + new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
+          : "";
+      }
+
+      /* ---------- Render: Admin ---------- */
+      function renderAdmin() {
+        var list = document.getElementById("adminList");
+        var sorted = sortTasks(tasks);
+        document.getElementById("listCount").textContent =
+          tasks.filter(function (t) { return !t.done; }).length + " activos · " +
+          tasks.filter(function (t) { return t.done; }).length + " completados";
+        document.getElementById("adminEmpty").hidden = tasks.length > 0;
+        document.getElementById("btnClearExamples").hidden = !tasks.some(function (t) { return t.example; });
+        list.innerHTML = sorted.map(function (t) {
+          var di = dueInfo(t.due);
+          var meta = "Urgencia " + URG_LABEL[t.urgency];
+          if (t.due) {
+            meta += " · " + fmtDate(t.due) + " · ";
+            if (t.done) meta += "completado";
+            else if (di.cls === "overdue") meta += '<span class="over">' + di.label + "</span>";
+            else if (di.cls === "today") meta += '<span class="today">' + di.label + "</span>";
+            else meta += di.label;
+          } else if (t.done) meta += " · completado";
+          return '<div class="row' + (t.done ? " done" : "") + '" data-id="' + t.id + '">' +
+            '<span class="sw ' + t.urgency + '"></span>' +
+            '<div class="body"><div class="t">' + esc(t.title) + "</div>" +
+            '<div class="meta">' + meta + "</div>" +
+            (t.note ? '<div class="meta">' + esc(t.note) + "</div>" : "") + "</div>" +
+            '<div class="acts">' +
+              '<button type="button" class="icon-btn done-btn" data-act="toggle">' + (t.done ? "Reabrir" : "Hecho") + "</button>" +
+              '<button type="button" class="icon-btn" data-act="edit">Editar</button>' +
+              '<button type="button" class="icon-btn del" data-act="del">Borrar</button>' +
+            "</div></div>";
+        }).join("");
+      }
+      function render() { renderExpo(); renderAdmin(); }
+
+      /* ---------- Cambio de vista ---------- */
+      var viewExpo = document.getElementById("viewExpo");
+      var viewAdmin = document.getElementById("viewAdmin");
+      function showView(which) {
+        var expo = which === "expo";
+        viewExpo.hidden = !expo;
+        viewAdmin.hidden = expo;
+        document.getElementById("btnExpo").classList.toggle("active", expo);
+        document.getElementById("btnAdmin").classList.toggle("active", !expo);
+        document.getElementById("btnExpo").setAttribute("aria-pressed", String(expo));
+        document.getElementById("btnAdmin").setAttribute("aria-pressed", String(!expo));
+        if (!expo) refreshGate();
+      }
+      document.getElementById("btnExpo").addEventListener("click", function () { showView("expo"); });
+      document.getElementById("btnAdmin").addEventListener("click", function () { showView("admin"); });
+
+      /* ---------- PIN ---------- */
+      var pinEntry = "";
+      function refreshGate() {
+        document.getElementById("pinGate").hidden = unlocked;
+        document.getElementById("adminPanel").hidden = !unlocked;
+        document.getElementById("lockDot").hidden = !unlocked;
+        drawDots();
+      }
+      function drawDots() {
+        var dots = document.getElementById("pinDots").children;
+        for (var i = 0; i < 4; i++) dots[i].classList.toggle("on", i < pinEntry.length);
+      }
+      function pinFail(msg) {
+        var gate = document.getElementById("gateCard");
+        document.getElementById("gateMsg").textContent = msg;
+        gate.classList.add("error");
+        gate.classList.remove("shake"); void gate.offsetWidth; gate.classList.add("shake");
+        pinEntry = ""; drawDots();
+        setTimeout(function () { gate.classList.remove("error"); }, 1600);
+      }
+      function pinKey(k) {
+        document.getElementById("gateMsg").textContent = "";
+        if (k === "clear") pinEntry = "";
+        else if (k === "back") pinEntry = pinEntry.slice(0, -1);
+        else if (/^\d$/.test(k) && pinEntry.length < 4) pinEntry += k;
+        drawDots();
+        if (pinEntry.length === 4) {
+          if (pinEntry === adminPin) {
+            unlocked = true; pinEntry = "";
+            refreshGate();
+            toast("Panel de administrador desbloqueado");
+            document.getElementById("fTitle").focus();
+          } else {
+            pinFail("PIN incorrecto. Inténtalo de nuevo.");
+          }
+        }
+      }
+      document.getElementById("keypad").addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-k]");
+        if (b) pinKey(b.getAttribute("data-k"));
+      });
+      document.addEventListener("keydown", function (e) {
+        if (viewAdmin.hidden || unlocked) return;
+        if (/^\d$/.test(e.key)) pinKey(e.key);
+        else if (e.key === "Backspace") pinKey("back");
+      });
+      document.getElementById("btnLock").addEventListener("click", function () {
+        unlocked = false; pinEntry = ""; cancelEditMode();
+        refreshGate(); toast("Panel bloqueado");
+      });
+      document.getElementById("pinForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var v = document.getElementById("newPin").value.trim();
+        if (!/^\d{4}$/.test(v)) { toast("El PIN debe tener exactamente 4 dígitos"); return; }
+        adminPin = v;
+        document.getElementById("newPin").value = "";
+        toast("PIN actualizado para esta sesión");
+      });
+
+      /* ---------- Formulario ---------- */
+      var urgPicker = document.getElementById("urgPicker");
+      urgPicker.addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-u]");
+        if (!b) return;
+        formUrgency = b.getAttribute("data-u");
+        Array.prototype.forEach.call(urgPicker.querySelectorAll("button"), function (x) {
+          x.classList.toggle("sel", x === b);
+        });
+      });
+      function setFormUrgency(u) {
+        formUrgency = u;
+        Array.prototype.forEach.call(urgPicker.querySelectorAll("button"), function (x) {
+          x.classList.toggle("sel", x.getAttribute("data-u") === u);
+        });
+      }
+      function cancelEditMode() {
+        editingId = null;
+        document.getElementById("taskForm").reset();
+        setFormUrgency("media");
+        document.getElementById("formTitle").textContent = "Nuevo pendiente";
+        document.getElementById("submitBtn").textContent = "Agregar al tablero";
+        document.getElementById("cancelEdit").hidden = true;
+      }
+      document.getElementById("cancelEdit").addEventListener("click", cancelEditMode);
+      document.getElementById("taskForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var title = document.getElementById("fTitle").value.trim();
+        if (!title) { toast("Escribe el título del pendiente"); return; }
+        var note = document.getElementById("fNote").value.trim();
+        var due = document.getElementById("fDue").value || null;
+        if (editingId) {
+          var t = tasks.find(function (x) { return x.id === editingId; });
+          if (t) { t.title = title; t.note = note; t.urgency = formUrgency; t.due = due; t.example = false; }
+          toast("Pendiente actualizado");
+          cancelEditMode();
+        } else {
+          tasks.push(mk(title, note, formUrgency, due, false, false));
+          toast("Pendiente agregado al tablero");
+          document.getElementById("taskForm").reset();
+          setFormUrgency("media");
+          document.getElementById("fTitle").focus();
+        }
+        render();
+      });
+
+      /* ---------- Acciones de la lista ---------- */
+      var delArm = {};
+      document.getElementById("adminList").addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-act]");
+        if (!btn) return;
+        var row = btn.closest(".row");
+        var id = row.getAttribute("data-id");
+        var t = tasks.find(function (x) { return x.id === id; });
+        if (!t) return;
+        var act = btn.getAttribute("data-act");
+        if (act === "toggle") {
+          t.done = !t.done;
+          toast(t.done ? "Marcado como completado" : "Pendiente reabierto");
+          if (editingId === id && t.done) cancelEditMode();
+          render();
+        } else if (act === "edit") {
+          editingId = id;
+          document.getElementById("fTitle").value = t.title;
+          document.getElementById("fNote").value = t.note;
+          document.getElementById("fDue").value = t.due || "";
+          setFormUrgency(t.urgency);
+          document.getElementById("formTitle").textContent = "Editar pendiente";
+          document.getElementById("submitBtn").textContent = "Guardar cambios";
+          document.getElementById("cancelEdit").hidden = false;
+          document.getElementById("taskForm").scrollIntoView({ behavior: "smooth", block: "start" });
+          document.getElementById("fTitle").focus();
+        } else if (act === "del") {
+          if (delArm[id]) {
+            tasks = tasks.filter(function (x) { return x.id !== id; });
+            delete delArm[id];
+            if (editingId === id) cancelEditMode();
+            toast("Pendiente borrado");
+            render();
+          } else {
+            delArm[id] = true;
+            btn.classList.add("confirm");
+            btn.textContent = "¿Borrar?";
+            setTimeout(function () {
+              if (delArm[id]) { delete delArm[id]; render(); }
+            }, 3000);
+          }
+        }
+      });
+
+      /* ---------- Exportar / Importar / Vaciar ---------- */
+      document.getElementById("btnExport").addEventListener("click", function () {
+        var data = tasks.map(function (t) {
+          return { titulo: t.title, detalle: t.note, urgencia: t.urgency, fechaLimite: t.due, completado: t.done };
+        });
+        var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "pendientes.json";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+        toast("pendientes.json descargado");
+      });
+      var fileImport = document.getElementById("fileImport");
+      document.getElementById("btnImport").addEventListener("click", function () { fileImport.click(); });
+      fileImport.addEventListener("change", function () {
+        var f = fileImport.files[0];
+        if (!f) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var arr = JSON.parse(reader.result);
+            if (!Array.isArray(arr)) throw new Error("formato");
+            var clean = [];
+            arr.forEach(function (x) {
+              if (!x || typeof x.titulo !== "string" || !x.titulo.trim()) return;
+              var u = ["alta", "media", "baja"].indexOf(x.urgencia) >= 0 ? x.urgencia : "media";
+              var due = typeof x.fechaLimite === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.fechaLimite) ? x.fechaLimite : null;
+              clean.push(mk(x.titulo.trim().slice(0, 90), typeof x.detalle === "string" ? x.detalle.slice(0, 220) : "", u, due, !!x.completado, false));
+            });
+            if (!clean.length) throw new Error("vacío");
+            tasks = clean;
+            cancelEditMode();
+            render();
+            toast("Tablero importado: " + clean.length + " pendientes");
+          } catch (err) {
+            toast("No se pudo importar: el archivo no es un pendientes.json válido");
+          }
+          fileImport.value = "";
+        };
+        reader.readAsText(f);
+      });
+      document.getElementById("btnClearExamples").addEventListener("click", function () {
+        tasks = tasks.filter(function (t) { return !t.example; });
+        cancelEditMode(); render();
+        toast("Ejemplos eliminados");
+      });
+      var wipeArmed = false;
+      document.getElementById("btnWipe").addEventListener("click", function () {
+        var btn = this;
+        if (!wipeArmed) {
+          wipeArmed = true;
+          btn.textContent = "¿Vaciar todo? Toca de nuevo";
+          setTimeout(function () { wipeArmed = false; btn.textContent = "Vaciar tablero"; }, 3000);
+          return;
+        }
+        wipeArmed = false;
+        btn.textContent = "Vaciar tablero";
+        tasks = [];
+        cancelEditMode(); render();
+        toast("Tablero vacío");
+      });
+
+      render();
+      refreshGate();
+    </script>
+  </body>
+</html>
