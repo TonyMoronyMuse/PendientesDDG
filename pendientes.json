@@ -12,5 +12,12 @@
     "urgencia": "media",
     "fechaLimite": "2026-11-27",
     "completado": false
+  },
+  {
+    "titulo": "Convivencia Navideña",
+    "detalle": "Producción de gafetes, corte de coroplast....",
+    "urgencia": "media",
+    "fechaLimite": "2026-12-08",
+    "completado": false
   }
 ]
