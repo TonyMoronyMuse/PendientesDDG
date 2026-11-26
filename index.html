@@ -206,10 +206,18 @@
       .panel h2 { margin: 0 0 14px; font-size: 1.12rem; font-weight: 800; }
       .field { margin-bottom: 14px; }
       .field label { display: block; font-weight: 700; font-size: .9rem; margin-bottom: 6px; }
-      .field input[type="text"], .field input[type="date"], .field textarea {
+      .field input[type="text"], .field input[type="date"], .field input[type="password"], .field textarea {
         width: 100%; border: 1.5px solid var(--line); border-radius: 10px;
         background: var(--bg-panel); padding: 11px 12px; min-height: 46px;
       }
+      .field input.missing { border-color: var(--alta); background: var(--alta-bg); }
+      .gh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .gh-grid .field { margin-bottom: 10px; }
+      .gh-status { font-size: .9rem; font-weight: 700; margin: 8px 0 0; min-height: 1.3em; color: var(--ink-2); }
+      .gh-status.ok { color: var(--baja-ink); }
+      .gh-status.err { color: var(--alta); }
+      .gh-help { margin: 8px 0 0; color: var(--ink-3); font-size: .85rem; }
+      .gh-help a { color: var(--brand-ink); font-weight: 700; }
       .field textarea { min-height: 74px; resize: vertical; }
       .urg-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
       .urg-picker button {
@@ -384,8 +392,8 @@
           <div class="savebar" id="saveBar">
             <p class="save-status" id="saveStatus" style="margin:0">Sin cambios por guardar.</p>
             <button class="btn primary" type="button" id="btnSave">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
-              Guardar cambios
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 8.5 12 3.5l5 5M4 20h16"/></svg>
+              <span id="btnSaveLabel">Guardar y subir al repo</span>
             </button>
           </div>
           <div class="admin-grid">
@@ -419,10 +427,38 @@
               </form>
 
               <div class="panel" style="margin-top:18px">
+                <h2>Conexión con GitHub</h2>
+                <p class="scope-note">El botón <strong>Guardar y subir al repo</strong> sube el <strong>pendientes.json</strong> directo a tu repositorio con la API de GitHub — sin descargar ni subir archivos a mano. Al abrir la página en cualquier dispositivo, el tablero se carga solo desde ese archivo, y la exposición lo revisa cada minuto. El token vive <strong>solo en esta pestaña</strong>: no se guarda en ningún lado, lo pegas al entrar como admin.</p>
+                <div class="gh-grid">
+                  <div class="field">
+                    <label for="ghOwner">Propietario</label>
+                    <input type="text" id="ghOwner" value="TonyMoronyMuse" autocomplete="off" spellcheck="false" />
+                  </div>
+                  <div class="field">
+                    <label for="ghRepo">Repositorio</label>
+                    <input type="text" id="ghRepo" value="PendientesDDG" autocomplete="off" spellcheck="false" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="ghBranch">Rama</label>
+                  <input type="text" id="ghBranch" value="main" autocomplete="off" spellcheck="false" />
+                </div>
+                <div class="field">
+                  <label for="ghToken">Token de GitHub</label>
+                  <input type="password" id="ghToken" placeholder="github_pat_… o ghp_…" autocomplete="off" spellcheck="false" />
+                </div>
+                <div class="tools" style="margin-bottom:0">
+                  <button class="btn small primary" type="button" id="btnGhTest" style="flex:0 1 auto">Probar conexión</button>
+                  <button class="btn small" type="button" id="btnGhUpload2">Subir ahora</button>
+                </div>
+                <p class="gh-status" id="ghStatus" role="status">Sin conectar: pega tu token y pulsa «Probar conexión».</p>
+                <p class="gh-help">¿No tienes token? Créalo en <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained tokens</a>: solo el repo <strong>PendientesDDG</strong>, permiso <strong>Contents: Read and write</strong>. Con ese permiso el token solo puede tocar ese archivo del repo.</p>
+              </div>
+
+              <div class="panel" style="margin-top:18px">
                 <h2>Tablero y dispositivos</h2>
-                <p class="scope-note">Cuando edites algo, pulsa <strong>Guardar cambios</strong> (arriba): se descarga el archivo <strong>pendientes.json</strong> con todo el tablero. Súbelo a tu repositorio de GitHub Pages junto al <strong>index.html</strong> — al abrir o recargar la página, el tablero se carga solo desde ese archivo en todos los dispositivos. Sin guardar, los cambios viven solo en esta pestaña y se pierden al recargar.</p>
                 <div class="tools">
-                  <button class="btn small" type="button" id="btnExport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6.5 10.5 12 16l5.5-5.5M4 20h16"/></svg> Exportar JSON</button>
+                  <button class="btn small" type="button" id="btnExport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6.5 10.5 12 16l5.5-5.5M4 20h16"/></svg> Descargar JSON (respaldo)</button>
                   <button class="btn small" type="button" id="btnImport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M6.5 7.5 12 2l5.5 5.5M4 20h16"/></svg> Importar JSON</button>
                   <input type="file" id="fileImport" accept="application/json,.json" hidden />
                   <button class="btn small" type="button" id="btnClearExamples" hidden>Quitar ejemplos</button>
@@ -513,6 +549,9 @@
       var formUrgency = "media";
       var dirty = false;
       var loadedFromFile = false;
+      var lastUploadAt = null;
+      var lastUploadTs = 0;
+      var uploading = false;
 
       /* ---------- Reloj ---------- */
       function tickClock() {
@@ -622,13 +661,20 @@
         var bar = document.getElementById("saveBar");
         var status = document.getElementById("saveStatus");
         bar.classList.toggle("dirty", dirty);
-        if (dirty) {
-          status.innerHTML = "<strong>Cambios sin guardar.</strong> Si recargas ahora, el tablero vuelve a como estaba. Pulsa «Guardar cambios».";
+        if (uploading) {
+          status.innerHTML = "<strong>Subiendo al repositorio…</strong> No cierres esta pestaña.";
+        } else if (dirty) {
+          status.innerHTML = "<strong>Cambios sin subir.</strong> Todavía no están en el repo: en otros dispositivos se sigue viendo lo anterior. Pulsa «Guardar y subir al repo».";
+        } else if (lastUploadAt) {
+          status.textContent = "Subido al repo a las " + lastUploadAt + ". GitHub Pages tarda ~1 minuto en reflejarlo en todos los dispositivos.";
         } else if (loadedFromFile) {
-          status.textContent = "Tablero cargado desde pendientes.json. Todo está guardado.";
+          status.textContent = "Tablero cargado desde pendientes.json del repo. Todo está guardado.";
         } else {
-          status.textContent = "Sin cambios por guardar.";
+          status.textContent = "Sin cambios por subir.";
         }
+        var lbl = document.getElementById("btnSaveLabel");
+        if (lbl) lbl.textContent = uploading ? "Subiendo…" : "Guardar y subir al repo";
+        document.getElementById("btnSave").disabled = uploading;
       }
       function markDirty() { dirty = true; updateSaveBar(); }
       window.addEventListener("beforeunload", function (e) {
@@ -780,7 +826,7 @@
           document.getElementById("fDue").value = t.due || "";
           setFormUrgency(t.urgency);
           document.getElementById("formTitle").textContent = "Editar pendiente";
-          document.getElementById("submitBtn").textContent = "Guardar cambios";
+          document.getElementById("submitBtn").textContent = "Guardar en la lista";
           document.getElementById("cancelEdit").hidden = false;
           document.getElementById("taskForm").scrollIntoView({ behavior: "smooth", block: "start" });
           document.getElementById("fTitle").focus();
@@ -803,24 +849,155 @@
         }
       });
 
-      /* ---------- Guardar / Exportar / Importar / Vaciar ---------- */
-      function saveChanges() {
-        var data = tasks.map(function (t) {
+      /* ---------- Guardar: subir pendientes.json al repo de GitHub ---------- */
+      function boardData() {
+        return tasks.map(function (t) {
           return { titulo: t.title, detalle: t.note, urgencia: t.urgency, fechaLimite: t.due, completado: t.done };
         });
-        var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      }
+      function boardJSON() { return JSON.stringify(boardData(), null, 2); }
+      function ghConfig() {
+        return {
+          owner: document.getElementById("ghOwner").value.trim(),
+          repo: document.getElementById("ghRepo").value.trim(),
+          branch: document.getElementById("ghBranch").value.trim() || "main",
+          token: document.getElementById("ghToken").value.trim(),
+          path: "pendientes.json"
+        };
+      }
+      function ghStatus(msg, cls) {
+        var el = document.getElementById("ghStatus");
+        el.textContent = msg;
+        el.className = "gh-status" + (cls ? " " + cls : "");
+      }
+      function b64Encode(str) {
+        var bytes = new TextEncoder().encode(str);
+        var bin = "";
+        var CHUNK = 0x8000;
+        for (var i = 0; i < bytes.length; i += CHUNK) {
+          bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+        }
+        return btoa(bin);
+      }
+      function ghHeaders(cfg) {
+        return {
+          "Authorization": "Bearer " + cfg.token,
+          "Accept": "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "Content-Type": "application/json"
+        };
+      }
+      function ghApiBase(cfg) {
+        return "https://api.github.com/repos/" + encodeURIComponent(cfg.owner) + "/" + encodeURIComponent(cfg.repo);
+      }
+      function requireToken() {
+        var cfg = ghConfig();
+        var tok = document.getElementById("ghToken");
+        if (!cfg.owner || !cfg.repo) {
+          ghStatus("Falta el propietario o el repositorio.", "err");
+          toast("Revisa propietario y repositorio de GitHub");
+          return null;
+        }
+        if (!cfg.token) {
+          tok.classList.add("missing");
+          tok.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(function () { tok.focus(); }, 350);
+          ghStatus("Pega tu token de GitHub para poder subir al repo. Sin token, el botón no puede guardar en ningún dispositivo.", "err");
+          toast("Falta el token de GitHub: pégalo en «Conexión con GitHub»");
+          return null;
+        }
+        tok.classList.remove("missing");
+        return cfg;
+      }
+      document.getElementById("ghToken").addEventListener("input", function () {
+        this.classList.remove("missing");
+      });
+      function testConnection() {
+        var cfg = requireToken();
+        if (!cfg) return;
+        ghStatus("Probando conexión con " + cfg.owner + "/" + cfg.repo + "…");
+        fetch(ghApiBase(cfg), { headers: ghHeaders(cfg) }).then(function (res) {
+          if (res.status === 401) throw new Error("Token no válido o vencido (401).");
+          if (res.status === 404) throw new Error("No se encontró el repo " + cfg.owner + "/" + cfg.repo + ", o el token no tiene acceso a él (404).");
+          if (!res.ok) throw new Error("GitHub respondió " + res.status + ".");
+          return res.json();
+        }).then(function () {
+          ghStatus("Conectado a " + cfg.owner + "/" + cfg.repo + " (rama " + cfg.branch + "). Ya puedes usar «Guardar y subir al repo».", "ok");
+          toast("Conexión con GitHub correcta");
+        }).catch(function (err) {
+          ghStatus("No se pudo conectar: " + err.message, "err");
+          toast("Error de conexión con GitHub");
+        });
+      }
+      document.getElementById("btnGhTest").addEventListener("click", testConnection);
+
+      function uploadToRepo() {
+        if (uploading) return;
+        var cfg = requireToken();
+        if (!cfg) return;
+        uploading = true;
+        updateSaveBar();
+        ghStatus("Subiendo pendientes.json a " + cfg.owner + "/" + cfg.repo + "…");
+        var fileUrl = ghApiBase(cfg) + "/contents/" + cfg.path + "?ref=" + encodeURIComponent(cfg.branch);
+        /* 1) Leer el sha actual del archivo (si existe) para actualizarlo */
+        fetch(fileUrl, { headers: ghHeaders(cfg) }).then(function (res) {
+          if (res.status === 404) return null; /* el archivo aún no existe: se crea */
+          if (res.status === 401) throw new Error("Token no válido o vencido (401).");
+          if (!res.ok) throw new Error("GitHub respondió " + res.status + " al leer el archivo.");
+          return res.json();
+        }).then(function (current) {
+          /* 2) Subir el contenido nuevo con commit directo a la rama */
+          var body = {
+            message: "Actualizar pendientes desde el tablero",
+            content: b64Encode(boardJSON()),
+            branch: cfg.branch
+          };
+          if (current && current.sha) body.sha = current.sha;
+          return fetch(ghApiBase(cfg) + "/contents/" + cfg.path, {
+            method: "PUT",
+            headers: ghHeaders(cfg),
+            body: JSON.stringify(body)
+          }).then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (data) {
+              if (res.status === 401) throw new Error("Token no válido o vencido (401).");
+              if (res.status === 403) throw new Error("El token no tiene permiso de escritura (Contents: Read and write) en este repo (403).");
+              if (res.status === 409) throw new Error("Conflicto: el archivo cambió en el repo. Recarga la página y vuelve a intentarlo (409).");
+              if (res.status === 422) throw new Error("GitHub rechazó la subida (422): " + (data.message || "datos no válidos") + ".");
+              if (!res.ok) throw new Error("GitHub respondió " + res.status + (data.message ? ": " + data.message : "") + ".");
+              return data;
+            });
+          });
+        }).then(function (data) {
+          uploading = false;
+          dirty = false;
+          loadedFromFile = true;
+          lastUploadTs = Date.now();
+          lastUploadAt = new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+          updateSaveBar();
+          var sha = data && data.commit && data.commit.sha ? data.commit.sha.slice(0, 7) : "";
+          ghStatus("Subido correctamente a las " + lastUploadAt + (sha ? " · commit " + sha : "") + ". En ~1 minuto GitHub Pages lo muestra en todos los dispositivos; la exposición también se actualiza sola cada minuto.", "ok");
+          toast("Subido al repo: ya se verá en todos los dispositivos");
+        }).catch(function (err) {
+          uploading = false;
+          updateSaveBar();
+          ghStatus("No se pudo subir: " + err.message + " Tus cambios siguen aquí, sin guardar en el repo.", "err");
+          toast("Error al subir al repo");
+        });
+      }
+      document.getElementById("btnSave").addEventListener("click", uploadToRepo);
+      document.getElementById("btnGhUpload2").addEventListener("click", uploadToRepo);
+
+      /* Descarga local como respaldo (no sube nada) */
+      function downloadJSON() {
+        var blob = new Blob([boardJSON()], { type: "application/json" });
         var a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = "pendientes.json";
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
-        dirty = false;
-        loadedFromFile = true;
-        updateSaveBar();
-        toast("Guardado: sube pendientes.json a tu repositorio para verlo en todos los dispositivos");
+        toast("Respaldo descargado: pendientes.json");
       }
-      document.getElementById("btnSave").addEventListener("click", saveChanges);
-      document.getElementById("btnExport").addEventListener("click", saveChanges);
+      document.getElementById("btnExport").addEventListener("click", downloadJSON);
       var fileImport = document.getElementById("fileImport");
       document.getElementById("btnImport").addEventListener("click", function () { fileImport.click(); });
       fileImport.addEventListener("change", function () {
@@ -876,32 +1053,46 @@
       refreshGate();
       updateSaveBar();
 
-      /* ---------- Carga inicial desde pendientes.json ----------
-         En GitHub Pages, si el repo tiene un pendientes.json junto al
-         index.html, ese archivo manda: el tablero se carga desde ahí en
-         todos los dispositivos y los ejemplos no aparecen. Si no existe
-         (como en este prototipo), se quedan los ejemplos. */
-      if (window.fetch) {
-        fetch("pendientes.json", { cache: "no-store" }).then(function (res) {
+      /* ---------- Carga desde pendientes.json del repo ----------
+         El pendientes.json junto al index.html (el que sube el botón de
+         guardado) manda en todos los dispositivos. Se revisa al abrir y
+         cada 60 s, para que la exposición refleje las subidas sin que
+         nadie tenga que recargar. Si no hay archivo (prototipo sin repo),
+         se quedan los ejemplos. */
+      function parseBoard(arr) {
+        if (!Array.isArray(arr)) return null;
+        var clean = [];
+        arr.forEach(function (x) {
+          if (!x || typeof x.titulo !== "string" || !x.titulo.trim()) return;
+          var u = ["alta", "media", "baja"].indexOf(x.urgencia) >= 0 ? x.urgencia : "media";
+          var due = typeof x.fechaLimite === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.fechaLimite) ? x.fechaLimite : null;
+          clean.push(mk(x.titulo.trim().slice(0, 90), typeof x.detalle === "string" ? x.detalle.slice(0, 220) : "", u, due, !!x.completado, false));
+        });
+        return clean;
+      }
+      function loadFromRepo() {
+        if (!window.fetch) return;
+        fetch("pendientes.json?t=" + Date.now(), { cache: "no-store" }).then(function (res) {
           if (!res.ok) throw new Error("sin archivo");
           return res.json();
         }).then(function (arr) {
-          if (!Array.isArray(arr)) return;
-          var clean = [];
-          arr.forEach(function (x) {
-            if (!x || typeof x.titulo !== "string" || !x.titulo.trim()) return;
-            var u = ["alta", "media", "baja"].indexOf(x.urgencia) >= 0 ? x.urgencia : "media";
-            var due = typeof x.fechaLimite === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.fechaLimite) ? x.fechaLimite : null;
-            clean.push(mk(x.titulo.trim().slice(0, 90), typeof x.detalle === "string" ? x.detalle.slice(0, 220) : "", u, due, !!x.completado, false));
-          });
+          var clean = parseBoard(arr);
+          if (!clean) return;
+          if (dirty || editingId) return; /* no pisar cambios del admin sin subir */
+          if (lastUploadTs && Date.now() - lastUploadTs < 180000) return; /* Pages aún puede servir la versión anterior tras subir */
+          var incoming = JSON.stringify(clean.map(function (t) {
+            return { titulo: t.title, detalle: t.note, urgencia: t.urgency, fechaLimite: t.due, completado: t.done };
+          }));
+          if (loadedFromFile && incoming === boardJSON()) return; /* sin cambios */
           tasks = clean;
           loadedFromFile = true;
           dirty = false;
-          cancelEditMode();
           render();
           updateSaveBar();
         }).catch(function () { /* sin pendientes.json: se quedan los ejemplos */ });
       }
+      loadFromRepo();
+      setInterval(loadFromRepo, 60000);
     </script>
   </body>
 </html>
