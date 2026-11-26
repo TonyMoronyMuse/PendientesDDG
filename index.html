@@ -361,6 +361,10 @@
           <div class="stat"><div class="num" id="stDone">0</div><div class="lbl">Completados</div></div>
         </div>
         <div class="board" id="board"></div>
+        <div class="empty" id="expoLoading">
+          <strong>Cargando pendientes…</strong>
+          Leyendo el tablero guardado en el repositorio.
+        </div>
         <div class="empty" id="expoEmpty" hidden>
           <strong>Sin pendientes activos</strong>
           El tablero está al corriente. Los nuevos pendientes aparecen aquí en cuanto el administrador los agregue.
@@ -428,7 +432,7 @@
 
               <div class="panel" style="margin-top:18px">
                 <h2>Conexión con GitHub</h2>
-                <p class="scope-note">El botón <strong>Guardar y subir al repo</strong> sube el <strong>pendientes.json</strong> directo a tu repositorio con la API de GitHub — sin descargar ni subir archivos a mano. Al abrir la página en cualquier dispositivo, el tablero se carga solo desde ese archivo, y la exposición lo revisa cada minuto. El token vive <strong>solo en esta pestaña</strong>: no se guarda en ningún lado, lo pegas al entrar como admin.</p>
+                <p class="scope-note">El botón <strong>Guardar y subir al repo</strong> sube el <strong>pendientes.json</strong> directo a tu repositorio con la API de GitHub — sin descargar ni subir archivos a mano. Al abrir la página en cualquier dispositivo, el tablero se carga solo desde ese archivo, y la exposición lo revisa cada minuto. El token se <strong>guarda en este navegador</strong> para que no tengas que pegarlo cada vez: vive solo en este dispositivo, nunca se sube al repo ni va en el código de la página. Cuando venza, pega el nuevo aquí y queda guardado en su lugar. Y si hay un archivo <strong>token.ddg</strong> junto a la página, al entrar al admin la página lo lee y usa ese token sin pedirlo.</p>
                 <div class="gh-grid">
                   <div class="field">
                     <label for="ghOwner">Propietario</label>
@@ -450,9 +454,10 @@
                 <div class="tools" style="margin-bottom:0">
                   <button class="btn small primary" type="button" id="btnGhTest" style="flex:0 1 auto">Probar conexión</button>
                   <button class="btn small" type="button" id="btnGhUpload2">Subir ahora</button>
+                  <button class="btn small danger" type="button" id="btnGhForget">Borrar token guardado</button>
                 </div>
-                <p class="gh-status" id="ghStatus" role="status">Sin conectar: pega tu token y pulsa «Probar conexión».</p>
-                <p class="gh-help">¿No tienes token? Créalo en <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained tokens</a>: solo el repo <strong>PendientesDDG</strong>, permiso <strong>Contents: Read and write</strong>. Con ese permiso el token solo puede tocar ese archivo del repo.</p>
+                <p class="gh-status" id="ghStatus" role="status">Sin conectar: pega tu token y pulsa «Probar conexión». Quedará guardado en este navegador.</p>
+                <p class="gh-help">¿No tienes token? Créalo en <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained tokens</a>: solo el repo <strong>PendientesDDG</strong>, permiso <strong>Contents: Read and write</strong>. Con ese permiso el token solo puede tocar ese archivo del repo. También puedes crear un archivo <strong>token.ddg</strong> junto al index.html con solo el token dentro: al entrar al admin la página lo lee y lo usa sin pedirlo. Ojo: quien pueda abrir ese archivo puede leer el token, trátalo como la llave del repo.</p>
               </div>
 
               <div class="panel" style="margin-top:18px">
@@ -461,7 +466,6 @@
                   <button class="btn small" type="button" id="btnExport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6.5 10.5 12 16l5.5-5.5M4 20h16"/></svg> Descargar JSON (respaldo)</button>
                   <button class="btn small" type="button" id="btnImport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M6.5 7.5 12 2l5.5 5.5M4 20h16"/></svg> Importar JSON</button>
                   <input type="file" id="fileImport" accept="application/json,.json" hidden />
-                  <button class="btn small" type="button" id="btnClearExamples" hidden>Quitar ejemplos</button>
                   <button class="btn small danger" type="button" id="btnWipe">Vaciar tablero</button>
                   <button class="btn small" type="button" id="btnLock">Bloquear panel</button>
                 </div>
@@ -535,14 +539,10 @@
         seq += 1;
         return { id: "t" + seq, title: title, note: note || "", urgency: urgency, due: due || null, done: !!done, example: !!example };
       }
-      var tasks = [
-        mk("Entregar el reporte semanal al jefe de departamento", "Formato PDF, con las firmas escaneadas.", "alta", offsetISO(-1), false, true),
-        mk("Enviar la cotización del material de impresión", "El proveedor espera respuesta antes del cierre.", "alta", offsetISO(0), false, true),
-        mk("Actualizar el inventario de la bodega", "Contar rollos, tintas y viniles.", "media", offsetISO(1), false, true),
-        mk("Agendar mantenimiento de la impresora grande", "Llamar al técnico y confirmar la visita.", "media", offsetISO(4), false, true),
-        mk("Ordenar el archivo de proyectos del semestre", "Separar por cliente y etiquetar las carpetas.", "baja", offsetISO(9), false, true),
-        mk("Imprimir los formatos de registro", "", "baja", offsetISO(-2), true, true)
-      ];
+      /* Sin pendientes precargados: el tablero arranca vacío y solo
+         muestra lo que venga de pendientes.json (los agregados reales). */
+      var tasks = [];
+      var firstLoadPending = true;
       var adminPin = "1234";
       var unlocked = false;
       var editingId = null;
@@ -617,7 +617,9 @@
             (t.due ? '<p class="duedate">Fecha límite: ' + esc(fmtDate(t.due)) + "</p>" : "") +
           "</article>";
         }).join("");
-        document.getElementById("expoEmpty").hidden = sorted.length > 0;
+        var loadingEl = document.getElementById("expoLoading");
+        if (loadingEl) loadingEl.hidden = !firstLoadPending;
+        document.getElementById("expoEmpty").hidden = firstLoadPending || sorted.length > 0;
         document.getElementById("expoFoot").textContent = done.length
           ? done.length + (done.length === 1 ? " pendiente completado" : " pendientes completados") + " · Actualizado " + new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
           : "";
@@ -631,7 +633,6 @@
           tasks.filter(function (t) { return !t.done; }).length + " activos · " +
           tasks.filter(function (t) { return t.done; }).length + " completados";
         document.getElementById("adminEmpty").hidden = tasks.length > 0;
-        document.getElementById("btnClearExamples").hidden = !tasks.some(function (t) { return t.example; });
         list.innerHTML = sorted.map(function (t) {
           var di = dueInfo(t.due);
           var meta = "Urgencia " + URG_LABEL[t.urgency];
@@ -727,6 +728,7 @@
           if (pinEntry === adminPin) {
             unlocked = true; pinEntry = "";
             refreshGate();
+            loadTokenFromFile();
             toast("Panel de administrador desbloqueado");
             document.getElementById("fTitle").focus();
           } else {
@@ -865,6 +867,69 @@
           path: "pendientes.json"
         };
       }
+      /* ---------- Token guardado en este navegador ----------
+         El token (y propietario/repo/rama) se guarda en localStorage de
+         ESTE navegador para no pegarlo en cada visita. Nunca se sube al
+         repo ni forma parte del código publicado. Al vencer, se pega el
+         nuevo y reemplaza al anterior; «Borrar token guardado» lo olvida. */
+      var GH_STORE_KEY = "pendientesDDG.ghConfig.v1";
+      function saveGhConfig() {
+        try {
+          var cfg = ghConfig();
+          localStorage.setItem(GH_STORE_KEY, JSON.stringify({
+            owner: cfg.owner, repo: cfg.repo, branch: cfg.branch, token: cfg.token
+          }));
+        } catch (err) { /* almacenamiento no disponible en este navegador */ }
+      }
+      function loadGhConfig() {
+        var saved = null;
+        try { saved = JSON.parse(localStorage.getItem(GH_STORE_KEY) || "null"); } catch (err) { saved = null; }
+        if (!saved) return false;
+        if (saved.owner) document.getElementById("ghOwner").value = saved.owner;
+        if (saved.repo) document.getElementById("ghRepo").value = saved.repo;
+        if (saved.branch) document.getElementById("ghBranch").value = saved.branch;
+        if (saved.token) document.getElementById("ghToken").value = saved.token;
+        return !!saved.token;
+      }
+      function forgetGhToken() {
+        try { localStorage.removeItem(GH_STORE_KEY); } catch (err) { /* sin almacenamiento */ }
+        document.getElementById("ghToken").value = "";
+        tokenFromFile = false;
+        suppressFileToken = true; /* en esta sesión no volver a leer token.ddg */
+        ghStatus("Token borrado de este navegador. Pega uno nuevo cuando quieras volver a subir al repo. Si tienes un token.ddg junto a la página, bórralo también o volverá a cargarse en la próxima visita.");
+        toast("Token guardado eliminado de este navegador");
+      }
+      /* ---------- Token desde el archivo token.ddg ----------
+         Al entrar al admin, la página busca un archivo token.ddg junto
+         al index.html. Si existe y su contenido tiene forma de token de
+         GitHub, lo usa sin pedirlo y lo guarda en este navegador. Si no
+         existe o está vacío, se usa el token guardado en el dispositivo
+         o se pide pegarlo a mano. El archivo lo crea Tony aparte: aquí
+         no hay ningún token escrito en el código. */
+      var tokenFromFile = false;
+      var tokenFileLoading = false;
+      var suppressFileToken = false;
+      function looksLikeToken(s) {
+        return /^(github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,})$/.test(s);
+      }
+      function loadTokenFromFile() {
+        if (tokenFromFile || tokenFileLoading || suppressFileToken || !window.fetch) return;
+        tokenFileLoading = true;
+        fetch("token.ddg?t=" + Date.now(), { cache: "no-store" }).then(function (res) {
+          if (!res.ok) throw new Error("sin archivo");
+          return res.text();
+        }).then(function (text) {
+          var tok = (text || "").trim().split(/\s+/)[0] || "";
+          if (!looksLikeToken(tok)) return; /* vacío o sin forma de token: se ignora */
+          document.getElementById("ghToken").value = tok;
+          document.getElementById("ghToken").classList.remove("missing");
+          tokenFromFile = true;
+          saveGhConfig();
+          ghStatus("Token cargado desde el archivo token.ddg junto a la página. No necesitas pegarlo.", "ok");
+        }).catch(function () {
+          /* Sin token.ddg: se usa el guardado en el dispositivo o el manual */
+        }).then(function () { tokenFileLoading = false; });
+      }
       function ghStatus(msg, cls) {
         var el = document.getElementById("ghStatus");
         el.textContent = msg;
@@ -911,7 +976,15 @@
       }
       document.getElementById("ghToken").addEventListener("input", function () {
         this.classList.remove("missing");
+        saveGhConfig();
+        if (this.value.trim()) {
+          ghStatus("Token guardado en este navegador. Pulsa «Probar conexión» para verificarlo; ya no tendrás que pegarlo en cada visita.");
+        }
       });
+      ["ghOwner", "ghRepo", "ghBranch"].forEach(function (id) {
+        document.getElementById(id).addEventListener("input", saveGhConfig);
+      });
+      document.getElementById("btnGhForget").addEventListener("click", forgetGhToken);
       function testConnection() {
         var cfg = requireToken();
         if (!cfg) return;
@@ -922,7 +995,8 @@
           if (!res.ok) throw new Error("GitHub respondió " + res.status + ".");
           return res.json();
         }).then(function () {
-          ghStatus("Conectado a " + cfg.owner + "/" + cfg.repo + " (rama " + cfg.branch + "). Ya puedes usar «Guardar y subir al repo».", "ok");
+          saveGhConfig();
+          ghStatus("Conectado a " + cfg.owner + "/" + cfg.repo + " (rama " + cfg.branch + "). Token guardado en este navegador. Ya puedes usar «Guardar y subir al repo».", "ok");
           toast("Conexión con GitHub correcta");
         }).catch(function (err) {
           ghStatus("No se pudo conectar: " + err.message, "err");
@@ -968,6 +1042,7 @@
             });
           });
         }).then(function (data) {
+          saveGhConfig();
           uploading = false;
           dirty = false;
           loadedFromFile = true;
@@ -1028,11 +1103,6 @@
         };
         reader.readAsText(f);
       });
-      document.getElementById("btnClearExamples").addEventListener("click", function () {
-        tasks = tasks.filter(function (t) { return !t.example; });
-        cancelEditMode(); markDirty(); render();
-        toast("Ejemplos eliminados");
-      });
       var wipeArmed = false;
       document.getElementById("btnWipe").addEventListener("click", function () {
         var btn = this;
@@ -1052,13 +1122,18 @@
       render();
       refreshGate();
       updateSaveBar();
+      if (loadGhConfig()) {
+        ghStatus("Token cargado desde este navegador (guardado de una visita anterior). Si venció, pega el nuevo y se guarda en su lugar.", "ok");
+      }
+      loadTokenFromFile();
 
       /* ---------- Carga desde pendientes.json del repo ----------
          El pendientes.json junto al index.html (el que sube el botón de
          guardado) manda en todos los dispositivos. Se revisa al abrir y
          cada 60 s, para que la exposición refleje las subidas sin que
-         nadie tenga que recargar. Si no hay archivo (prototipo sin repo),
-         se quedan los ejemplos. */
+         nadie tenga que recargar. No hay pendientes de ejemplo: si no
+         hay archivo, o el archivo es una lista vacía [], el tablero
+         queda vacío y solo muestra los pendientes agregados reales. */
       function parseBoard(arr) {
         if (!Array.isArray(arr)) return null;
         var clean = [];
@@ -1071,25 +1146,30 @@
         return clean;
       }
       function loadFromRepo() {
-        if (!window.fetch) return;
+        if (!window.fetch) { firstLoadPending = false; render(); return; }
         fetch("pendientes.json?t=" + Date.now(), { cache: "no-store" }).then(function (res) {
           if (!res.ok) throw new Error("sin archivo");
           return res.json();
         }).then(function (arr) {
           var clean = parseBoard(arr);
-          if (!clean) return;
-          if (dirty || editingId) return; /* no pisar cambios del admin sin subir */
-          if (lastUploadTs && Date.now() - lastUploadTs < 180000) return; /* Pages aún puede servir la versión anterior tras subir */
+          firstLoadPending = false;
+          if (!clean) { render(); return; } /* incluye [] válido: tablero vacío, sin ejemplos */
+          if (dirty || editingId) { render(); return; } /* no pisar cambios del admin sin subir */
+          if (lastUploadTs && Date.now() - lastUploadTs < 180000) { render(); return; } /* Pages aún puede servir la versión anterior tras subir */
           var incoming = JSON.stringify(clean.map(function (t) {
             return { titulo: t.title, detalle: t.note, urgencia: t.urgency, fechaLimite: t.due, completado: t.done };
           }));
-          if (loadedFromFile && incoming === boardJSON()) return; /* sin cambios */
+          if (loadedFromFile && incoming === boardJSON()) { render(); return; } /* sin cambios */
           tasks = clean;
           loadedFromFile = true;
           dirty = false;
           render();
           updateSaveBar();
-        }).catch(function () { /* sin pendientes.json: se quedan los ejemplos */ });
+        }).catch(function () {
+          /* Sin pendientes.json accesible: tablero vacío, nunca ejemplos */
+          firstLoadPending = false;
+          render();
+        });
       }
       loadFromRepo();
       setInterval(loadFromRepo, 60000);
