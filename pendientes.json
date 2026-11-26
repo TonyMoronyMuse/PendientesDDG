@@ -7,7 +7,7 @@
     "completado": true
   },
   {
-    "titulo": "Intslacion 2 juegos mamparas",
+    "titulo": "Instalacion 2 juegos mamparas",
     "detalle": "en paranifo presidium 2.00pm",
     "urgencia": "media",
     "fechaLimite": "2026-11-27",
@@ -18,6 +18,20 @@
     "detalle": "Producción de gafetes, corte de coroplast....",
     "urgencia": "media",
     "fechaLimite": "2026-12-08",
+    "completado": false
+  },
+  {
+    "titulo": "Instalacion Lona Fac. Deportes",
+    "detalle": "9:00 am Bastidor modular 4x2m",
+    "urgencia": "media",
+    "fechaLimite": "2026-11-27",
+    "completado": false
+  },
+  {
+    "titulo": "Instalacion Consejo Gimnasio MXLI",
+    "detalle": "9:00 am Estructura \"U\" + 1 Torre Gde.",
+    "urgencia": "media",
+    "fechaLimite": "2026-12-07",
     "completado": false
   }
 ]
