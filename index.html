@@ -236,6 +236,18 @@
       .btn.small { min-height: 40px; padding: 7px 13px; font-size: .88rem; border-radius: 9px; }
       .btn.ghost { background: transparent; }
 
+      /* ---------- Barra de guardado ---------- */
+      .savebar {
+        display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+        background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius);
+        box-shadow: var(--shadow); padding: 14px 18px; margin-bottom: 18px;
+      }
+      .savebar.dirty { border-color: var(--media); background: var(--media-bg); }
+      .savebar .save-status { flex: 1 1 220px; font-weight: 700; font-size: .95rem; color: var(--ink-2); }
+      .savebar .save-status strong { color: var(--ink); }
+      .savebar.dirty .save-status { color: var(--media-ink); }
+      .savebar .btn.primary { flex: 0 1 auto; min-width: 210px; }
+
       .tools { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
       .scope-note {
         margin: 0 0 16px; color: var(--ink-2); font-size: .9rem;
@@ -369,6 +381,13 @@
 
         <!-- Panel -->
         <div id="adminPanel" hidden>
+          <div class="savebar" id="saveBar">
+            <p class="save-status" id="saveStatus" style="margin:0">Sin cambios por guardar.</p>
+            <button class="btn primary" type="button" id="btnSave">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+              Guardar cambios
+            </button>
+          </div>
           <div class="admin-grid">
             <div>
               <form class="panel" id="taskForm" autocomplete="off">
@@ -401,7 +420,7 @@
 
               <div class="panel" style="margin-top:18px">
                 <h2>Tablero y dispositivos</h2>
-                <p class="scope-note">Este prototipo guarda los cambios <strong>solo en esta pestaña</strong>. Para compartir el mismo tablero entre varios dispositivos (el plan de GitHub Pages), <strong>exporta</strong> el archivo <strong>pendientes.json</strong> y súbelo a tu repositorio; en cada dispositivo usa <strong>Importar</strong> para cargarlo.</p>
+                <p class="scope-note">Cuando edites algo, pulsa <strong>Guardar cambios</strong> (arriba): se descarga el archivo <strong>pendientes.json</strong> con todo el tablero. Súbelo a tu repositorio de GitHub Pages junto al <strong>index.html</strong> — al abrir o recargar la página, el tablero se carga solo desde ese archivo en todos los dispositivos. Sin guardar, los cambios viven solo en esta pestaña y se pierden al recargar.</p>
                 <div class="tools">
                   <button class="btn small" type="button" id="btnExport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6.5 10.5 12 16l5.5-5.5M4 20h16"/></svg> Exportar JSON</button>
                   <button class="btn small" type="button" id="btnImport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M6.5 7.5 12 2l5.5 5.5M4 20h16"/></svg> Importar JSON</button>
@@ -492,6 +511,8 @@
       var unlocked = false;
       var editingId = null;
       var formUrgency = "media";
+      var dirty = false;
+      var loadedFromFile = false;
 
       /* ---------- Reloj ---------- */
       function tickClock() {
@@ -595,6 +616,24 @@
         }).join("");
       }
       function render() { renderExpo(); renderAdmin(); }
+
+      /* ---------- Estado de guardado ---------- */
+      function updateSaveBar() {
+        var bar = document.getElementById("saveBar");
+        var status = document.getElementById("saveStatus");
+        bar.classList.toggle("dirty", dirty);
+        if (dirty) {
+          status.innerHTML = "<strong>Cambios sin guardar.</strong> Si recargas ahora, el tablero vuelve a como estaba. Pulsa «Guardar cambios».";
+        } else if (loadedFromFile) {
+          status.textContent = "Tablero cargado desde pendientes.json. Todo está guardado.";
+        } else {
+          status.textContent = "Sin cambios por guardar.";
+        }
+      }
+      function markDirty() { dirty = true; updateSaveBar(); }
+      window.addEventListener("beforeunload", function (e) {
+        if (dirty) { e.preventDefault(); e.returnValue = ""; }
+      });
 
       /* ---------- Cambio de vista ---------- */
       var viewExpo = document.getElementById("viewExpo");
@@ -714,6 +753,7 @@
           setFormUrgency("media");
           document.getElementById("fTitle").focus();
         }
+        markDirty();
         render();
       });
 
@@ -731,6 +771,7 @@
           t.done = !t.done;
           toast(t.done ? "Marcado como completado" : "Pendiente reabierto");
           if (editingId === id && t.done) cancelEditMode();
+          markDirty();
           render();
         } else if (act === "edit") {
           editingId = id;
@@ -749,6 +790,7 @@
             delete delArm[id];
             if (editingId === id) cancelEditMode();
             toast("Pendiente borrado");
+            markDirty();
             render();
           } else {
             delArm[id] = true;
@@ -761,8 +803,8 @@
         }
       });
 
-      /* ---------- Exportar / Importar / Vaciar ---------- */
-      document.getElementById("btnExport").addEventListener("click", function () {
+      /* ---------- Guardar / Exportar / Importar / Vaciar ---------- */
+      function saveChanges() {
         var data = tasks.map(function (t) {
           return { titulo: t.title, detalle: t.note, urgencia: t.urgency, fechaLimite: t.due, completado: t.done };
         });
@@ -772,8 +814,13 @@
         a.download = "pendientes.json";
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
-        toast("pendientes.json descargado");
-      });
+        dirty = false;
+        loadedFromFile = true;
+        updateSaveBar();
+        toast("Guardado: sube pendientes.json a tu repositorio para verlo en todos los dispositivos");
+      }
+      document.getElementById("btnSave").addEventListener("click", saveChanges);
+      document.getElementById("btnExport").addEventListener("click", saveChanges);
       var fileImport = document.getElementById("fileImport");
       document.getElementById("btnImport").addEventListener("click", function () { fileImport.click(); });
       fileImport.addEventListener("change", function () {
@@ -794,6 +841,7 @@
             if (!clean.length) throw new Error("vacío");
             tasks = clean;
             cancelEditMode();
+            markDirty();
             render();
             toast("Tablero importado: " + clean.length + " pendientes");
           } catch (err) {
@@ -805,7 +853,7 @@
       });
       document.getElementById("btnClearExamples").addEventListener("click", function () {
         tasks = tasks.filter(function (t) { return !t.example; });
-        cancelEditMode(); render();
+        cancelEditMode(); markDirty(); render();
         toast("Ejemplos eliminados");
       });
       var wipeArmed = false;
@@ -820,12 +868,40 @@
         wipeArmed = false;
         btn.textContent = "Vaciar tablero";
         tasks = [];
-        cancelEditMode(); render();
+        cancelEditMode(); markDirty(); render();
         toast("Tablero vacío");
       });
 
       render();
       refreshGate();
+      updateSaveBar();
+
+      /* ---------- Carga inicial desde pendientes.json ----------
+         En GitHub Pages, si el repo tiene un pendientes.json junto al
+         index.html, ese archivo manda: el tablero se carga desde ahí en
+         todos los dispositivos y los ejemplos no aparecen. Si no existe
+         (como en este prototipo), se quedan los ejemplos. */
+      if (window.fetch) {
+        fetch("pendientes.json", { cache: "no-store" }).then(function (res) {
+          if (!res.ok) throw new Error("sin archivo");
+          return res.json();
+        }).then(function (arr) {
+          if (!Array.isArray(arr)) return;
+          var clean = [];
+          arr.forEach(function (x) {
+            if (!x || typeof x.titulo !== "string" || !x.titulo.trim()) return;
+            var u = ["alta", "media", "baja"].indexOf(x.urgencia) >= 0 ? x.urgencia : "media";
+            var due = typeof x.fechaLimite === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.fechaLimite) ? x.fechaLimite : null;
+            clean.push(mk(x.titulo.trim().slice(0, 90), typeof x.detalle === "string" ? x.detalle.slice(0, 220) : "", u, due, !!x.completado, false));
+          });
+          tasks = clean;
+          loadedFromFile = true;
+          dirty = false;
+          cancelEditMode();
+          render();
+          updateSaveBar();
+        }).catch(function () { /* sin pendientes.json: se quedan los ejemplos */ });
+      }
     </script>
   </body>
 </html>
