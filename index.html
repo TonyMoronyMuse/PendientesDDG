@@ -133,6 +133,60 @@
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         align-items: start;
       }
+      /* ---------- Separación por meses ---------- */
+      .month-nav {
+        display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 18px;
+      }
+      .month-nav[hidden] { display: none !important; }
+      .m-chip {
+        min-height: 38px; padding: 7px 14px; border-radius: 999px;
+        border: 1.5px solid var(--line); background: var(--surface);
+        font-weight: 700; font-size: .88rem; color: var(--ink-2);
+        display: inline-flex; align-items: center; gap: 7px; box-shadow: var(--shadow);
+      }
+      .m-chip .cnt {
+        background: var(--surface-2); color: var(--ink); border-radius: 999px;
+        padding: 1px 8px; font-size: .8rem; font-weight: 800; font-variant-numeric: tabular-nums;
+      }
+      .m-chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+      .m-chip.active .cnt { background: var(--brand); color: #1c1304; }
+      .month-group { margin-bottom: 26px; }
+      .month-group:last-child { margin-bottom: 6px; }
+      .month-head {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        margin: 0 2px 12px; padding-bottom: 10px; border-bottom: 2px solid var(--line);
+      }
+      .month-head.is-current { border-bottom-color: var(--brand); }
+      .month-title {
+        margin: 0; font-size: 1.05rem; font-weight: 900; letter-spacing: -.01em;
+        text-transform: capitalize; display: flex; align-items: center; gap: 9px;
+      }
+      .month-title .m-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--brand); flex: none; }
+      .month-head.is-past .month-title .m-dot { background: var(--alta); }
+      .month-head.is-nodate .month-title .m-dot { background: var(--ink-3); }
+      .month-meta { color: var(--ink-2); font-size: .88rem; font-weight: 600; }
+      .month-meta .over { color: var(--alta); font-weight: 800; }
+      .month-meta .today { color: var(--media-ink); font-weight: 800; }
+      .month-badge {
+        margin-left: auto; font-family: "Archivo Narrow", "Archivo", sans-serif;
+        font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+        padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap;
+      }
+      .month-head.is-current .month-badge { background: var(--media-bg); color: var(--media-ink); }
+      .month-board {
+        display: grid; gap: 14px;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        align-items: start;
+      }
+      .admin-month-head {
+        display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+        margin: 18px 2px 10px; padding-bottom: 8px; border-bottom: 2px solid var(--line);
+      }
+      .admin-month-head:first-child { margin-top: 2px; }
+      .admin-month-head.is-current { border-bottom-color: var(--brand); }
+      .admin-month-head h3 { margin: 0; font-size: 1rem; font-weight: 900; text-transform: capitalize; }
+      .admin-month-head span { color: var(--ink-3); font-weight: 600; font-size: .88rem; }
+      .admin-month-head .over { color: var(--alta); font-weight: 800; }
       .card {
         background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
         box-shadow: var(--shadow); padding: 18px 20px 16px; position: relative; overflow: hidden;
@@ -164,6 +218,18 @@
       .card .note { margin: 8px 0 0; color: var(--ink-2); font-size: .98rem; overflow-wrap: anywhere; }
       .card .duedate { margin: 12px 0 0; color: var(--ink-3); font-size: .88rem; font-weight: 600; }
       .expo-foot { margin: 22px 2px 0; color: var(--ink-3); font-weight: 600; font-size: .95rem; }
+      .syncbar {
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: var(--shadow); padding: 11px 16px; margin-bottom: 18px;
+      }
+      .syncbar .sync-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ink-3); flex: none; }
+      .syncbar.live .sync-dot { background: var(--baja); }
+      .syncbar.error .sync-dot { background: var(--alta); }
+      .syncbar .sync-text { flex: 1 1 260px; font-weight: 700; font-size: .92rem; color: var(--ink-2); }
+      .syncbar .sync-text strong { color: var(--ink); }
+      .syncbar a { color: var(--brand-ink); font-weight: 800; text-decoration: none; white-space: nowrap; }
+      .syncbar a:hover { text-decoration: underline; }
 
       .empty {
         background: var(--surface); border: 1.5px dashed var(--line); border-radius: var(--radius);
@@ -318,13 +384,14 @@
         .brand { min-width: 0; }
         .viewswitch { width: 100%; }
         .vs-btn { flex: 1 1 0; justify-content: center; padding: 10px 8px; }
-        .board { grid-template-columns: 1fr; }
+        .board, .month-board { grid-template-columns: 1fr; }
+        .month-badge { margin-left: 0; }
         .row { flex-wrap: wrap; }
         .row .acts { width: 100%; justify-content: flex-start; padding-left: 24px; }
       }
       /* TV / pantalla grande: tarjetas más legibles a distancia */
       @media (min-width: 1600px) {
-        .board { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
+        .board, .month-board { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
         .card h3 { font-size: 1.55rem; }
         .card .note { font-size: 1.1rem; }
       }
@@ -360,10 +427,18 @@
           <div class="stat today"><div class="num" id="stToday">0</div><div class="lbl">Vencen hoy</div></div>
           <div class="stat"><div class="num" id="stDone">0</div><div class="lbl">Completados</div></div>
         </div>
-        <div class="board" id="board"></div>
+        <div class="syncbar" id="syncBar">
+          <span class="sync-dot" aria-hidden="true"></span>
+          <span class="sync-text" id="syncText"><strong>Vinculado a GitHub:</strong> conectando con TonyMoronyMuse/PendientesDDG…</span>
+          <a href="https://tonymoronymuse.github.io/PendientesDDG/" target="_blank" rel="noopener">Ver en GitHub Pages</a>
+          <a href="https://github.com/TonyMoronyMuse/PendientesDDG" target="_blank" rel="noopener">Abrir repo</a>
+          <button class="btn small" type="button" id="btnSyncNow">Actualizar ahora</button>
+        </div>
+        <div class="month-nav" id="monthNav" aria-label="Filtrar por mes" hidden></div>
+        <div id="board"></div>
         <div class="empty" id="expoLoading">
           <strong>Cargando pendientes…</strong>
-          Leyendo el tablero guardado en el repositorio.
+          Leyendo el tablero en vivo desde GitHub (TonyMoronyMuse/PendientesDDG).
         </div>
         <div class="empty" id="expoEmpty" hidden>
           <strong>Sin pendientes activos</strong>
@@ -432,7 +507,7 @@
 
               <div class="panel" style="margin-top:18px">
                 <h2>Conexión con GitHub</h2>
-                <p class="scope-note">El botón <strong>Guardar y subir al repo</strong> sube el <strong>pendientes.json</strong> directo a tu repositorio con la API de GitHub — sin descargar ni subir archivos a mano. Al abrir la página en cualquier dispositivo, el tablero se carga solo desde ese archivo, y la exposición lo revisa cada minuto. El token se <strong>guarda en este navegador</strong> para que no tengas que pegarlo cada vez: vive solo en este dispositivo, nunca se sube al repo ni va en el código de la página. Cuando venza, pega el nuevo aquí y queda guardado en su lugar. Y si hay un archivo <strong>token.ddg</strong> junto a la página, al entrar al admin la página lo lee y usa ese token sin pedirlo.</p>
+                <p class="scope-note">Esta copia del espacio de trabajo es <strong>el mismo tablero</strong> de GitHub Pages: lee el <strong>pendientes.json</strong> en vivo desde <strong>TonyMoronyMuse/PendientesDDG</strong> y lo revisa cada minuto, así que cualquier cambio hecho en la plataforma de GitHub se refleja aquí, y viceversa. El botón <strong>Guardar y subir al repo</strong> sube el <strong>pendientes.json</strong> directo a ese mismo repositorio con la API de GitHub — sin descargar ni subir archivos a mano. El token se <strong>guarda en este navegador</strong> para que no tengas que pegarlo cada vez: vive solo en este dispositivo, nunca se sube al repo ni va en el código de la página. Cuando venza, pega el nuevo aquí y queda guardado en su lugar.</p>
                 <div class="gh-grid">
                   <div class="field">
                     <label for="ghOwner">Propietario</label>
@@ -457,7 +532,7 @@
                   <button class="btn small danger" type="button" id="btnGhForget">Borrar token guardado</button>
                 </div>
                 <p class="gh-status" id="ghStatus" role="status">Sin conectar: pega tu token y pulsa «Probar conexión». Quedará guardado en este navegador.</p>
-                <p class="gh-help">¿No tienes token? Créalo en <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained tokens</a>: solo el repo <strong>PendientesDDG</strong>, permiso <strong>Contents: Read and write</strong>. Con ese permiso el token solo puede tocar ese archivo del repo. También puedes crear un archivo <strong>token.ddg</strong> junto al index.html con solo el token dentro: al entrar al admin la página lo lee y lo usa sin pedirlo. Ojo: quien pueda abrir ese archivo puede leer el token, trátalo como la llave del repo.</p>
+                <p class="gh-help">¿No tienes token? Créalo en <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained tokens</a>: solo el repo <strong>PendientesDDG</strong>, permiso <strong>Contents: Read and write</strong>. Con ese permiso el token solo puede tocar ese archivo del repo. No lo subas nunca a un archivo del repo ni a un archivo compartido por enlace: cualquiera con el enlace podría leerlo y escribir en tu tablero.</p>
               </div>
 
               <div class="panel" style="margin-top:18px">
@@ -512,7 +587,50 @@
         return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
       }
       var MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+      var MESES_LARGOS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
       var DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+      /* ---------- Agrupación por mes (según fecha límite) ---------- */
+      var SIN_FECHA_KEY = "sin-fecha";
+      function monthKeyOf(iso) {
+        if (!iso) return SIN_FECHA_KEY;
+        return iso.slice(0, 7); /* YYYY-MM */
+      }
+      function monthLabelOf(key) {
+        if (key === SIN_FECHA_KEY) return "Sin fecha límite";
+        var y = Number(key.slice(0, 4));
+        var m = Number(key.slice(5, 7)) - 1;
+        return MESES_LARGOS[m] + " " + y;
+      }
+      function monthShortLabelOf(key) {
+        if (key === SIN_FECHA_KEY) return "Sin fecha";
+        var y = Number(key.slice(0, 4));
+        var m = Number(key.slice(5, 7)) - 1;
+        var now = new Date();
+        var curKey = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+        if (key === curKey) return "Este mes · " + MESES_LARGOS[m];
+        return MESES_LARGOS[m] + (y !== now.getFullYear() ? " " + y : "");
+      }
+      function currentMonthKey() {
+        var n = new Date();
+        return n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0");
+      }
+      /* Agrupa una lista ya ordenada por mes, meses en orden cronológico
+         y «Sin fecha límite» siempre al final. */
+      function groupByMonth(list) {
+        var map = {};
+        var keys = [];
+        list.forEach(function (t) {
+          var k = monthKeyOf(t.due);
+          if (!map[k]) { map[k] = []; keys.push(k); }
+          map[k].push(t);
+        });
+        keys.sort(function (a, b) {
+          if (a === SIN_FECHA_KEY) return 1;
+          if (b === SIN_FECHA_KEY) return -1;
+          return a < b ? -1 : a > b ? 1 : 0;
+        });
+        return keys.map(function (k) { return { key: k, label: monthLabelOf(k), items: map[k] }; });
+      }
       function fmtDate(iso) {
         var d = parseISO(iso); if (!d) return "";
         return DIAS[d.getDay()] + " " + d.getDate() + " " + MESES[d.getMonth()] + " " + d.getFullYear();
@@ -548,6 +666,7 @@
       var editingId = null;
       var formUrgency = "media";
       var dirty = false;
+      var expoMonthFilter = "all"; /* "all" | YYYY-MM | sin-fecha */
       var loadedFromFile = false;
       var lastUploadAt = null;
       var lastUploadTs = 0;
@@ -591,7 +710,20 @@
         });
       }
 
-      /* ---------- Render: Exposición ---------- */
+      /* ---------- Render: Exposición (con separación por meses) ---------- */
+      function cardHTML(t) {
+        var di = dueInfo(t.due);
+        var overdue = di.days !== null && di.days < 0;
+        return '<article class="card u-' + t.urgency + (overdue ? " is-overdue" : "") + '">' +
+          '<div class="card-top">' +
+            '<span class="pill ' + t.urgency + '">Urgencia ' + URG_LABEL[t.urgency] + "</span>" +
+            '<span class="due-chip ' + di.cls + '">' + esc(di.label) + "</span>" +
+          "</div>" +
+          "<h3>" + esc(t.title) + "</h3>" +
+          (t.note ? '<p class="note">' + esc(t.note) + "</p>" : "") +
+          (t.due ? '<p class="duedate">Fecha límite: ' + esc(fmtDate(t.due)) + "</p>" : "") +
+        "</article>";
+      }
       function renderExpo() {
         var active = tasks.filter(function (t) { return !t.done; });
         var done = tasks.filter(function (t) { return t.done; });
@@ -602,20 +734,52 @@
         document.getElementById("stToday").textContent = today;
         document.getElementById("stDone").textContent = done.length;
 
-        var board = document.getElementById("board");
         var sorted = sortTasks(active);
-        board.innerHTML = sorted.map(function (t) {
-          var di = dueInfo(t.due);
-          var overdue = di.days !== null && di.days < 0;
-          return '<article class="card u-' + t.urgency + (overdue ? " is-overdue" : "") + '">' +
-            '<div class="card-top">' +
-              '<span class="pill ' + t.urgency + '">Urgencia ' + URG_LABEL[t.urgency] + "</span>" +
-              '<span class="due-chip ' + di.cls + '">' + esc(di.label) + "</span>" +
+        var groups = groupByMonth(sorted);
+        var curKey = currentMonthKey();
+
+        /* Si el mes filtrado ya no existe, volver a «Todos» */
+        if (expoMonthFilter !== "all" && !groups.some(function (g) { return g.key === expoMonthFilter; })) {
+          expoMonthFilter = "all";
+        }
+
+        /* Barra de meses: solo aparece si hay más de un mes con pendientes */
+        var nav = document.getElementById("monthNav");
+        if (groups.length > 1) {
+          nav.hidden = false;
+          var navHTML = '<button type="button" class="m-chip' + (expoMonthFilter === "all" ? " active" : "") + '" data-mkey="all">Todos los meses <span class="cnt">' + active.length + "</span></button>";
+          navHTML += groups.map(function (g) {
+            return '<button type="button" class="m-chip' + (expoMonthFilter === g.key ? " active" : "") + '" data-mkey="' + esc(g.key) + '">' + esc(monthShortLabelOf(g.key)) + ' <span class="cnt">' + g.items.length + "</span></button>";
+          }).join("");
+          nav.innerHTML = navHTML;
+        } else {
+          nav.hidden = true;
+          nav.innerHTML = "";
+        }
+
+        var visibleGroups = expoMonthFilter === "all" ? groups : groups.filter(function (g) { return g.key === expoMonthFilter; });
+
+        var board = document.getElementById("board");
+        board.innerHTML = visibleGroups.map(function (g) {
+          var gOver = g.items.filter(function (t) { var d = dueInfo(t.due); return d.days !== null && d.days < 0; }).length;
+          var gToday = g.items.filter(function (t) { return dueInfo(t.due).days === 0; }).length;
+          var isCurrent = g.key === curKey;
+          var isPast = g.key !== SIN_FECHA_KEY && g.key < curKey;
+          var isNoDate = g.key === SIN_FECHA_KEY;
+          var metaParts = [];
+          metaParts.push(g.items.length + (g.items.length === 1 ? " pendiente" : " pendientes"));
+          if (gOver) metaParts.push('<span class="over">' + gOver + (gOver === 1 ? " vencido" : " vencidos") + "</span>");
+          if (gToday) metaParts.push('<span class="today">' + gToday + (gToday === 1 ? " vence hoy" : " vencen hoy") + "</span>");
+          var badge = isNoDate ? "Sin fecha" : isCurrent ? "Mes actual" : isPast ? "Mes pasado" : "Próximo";
+          var headCls = "month-head" + (isCurrent ? " is-current" : "") + (isPast ? " is-past" : "") + (isNoDate ? " is-nodate" : "");
+          return '<section class="month-group" aria-label="' + esc(g.label) + '">' +
+            '<div class="' + headCls + '">' +
+              '<h2 class="month-title"><span class="m-dot" aria-hidden="true"></span>' + esc(g.label) + "</h2>" +
+              '<span class="month-meta">' + metaParts.join(" · ") + "</span>" +
+              '<span class="month-badge">' + badge + "</span>" +
             "</div>" +
-            "<h3>" + esc(t.title) + "</h3>" +
-            (t.note ? '<p class="note">' + esc(t.note) + "</p>" : "") +
-            (t.due ? '<p class="duedate">Fecha límite: ' + esc(fmtDate(t.due)) + "</p>" : "") +
-          "</article>";
+            '<div class="month-board">' + g.items.map(cardHTML).join("") + "</div>" +
+          "</section>";
         }).join("");
         var loadingEl = document.getElementById("expoLoading");
         if (loadingEl) loadingEl.hidden = !firstLoadPending;
@@ -624,8 +788,35 @@
           ? done.length + (done.length === 1 ? " pendiente completado" : " pendientes completados") + " · Actualizado " + new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
           : "";
       }
+      document.getElementById("monthNav").addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-mkey]");
+        if (!b) return;
+        expoMonthFilter = b.getAttribute("data-mkey");
+        renderExpo();
+      });
 
-      /* ---------- Render: Admin ---------- */
+      /* ---------- Render: Admin (con separación por meses) ---------- */
+      function adminRowHTML(t) {
+        var di = dueInfo(t.due);
+        var meta = "Urgencia " + URG_LABEL[t.urgency];
+        if (t.due) {
+          meta += " · " + fmtDate(t.due) + " · ";
+          if (t.done) meta += "completado";
+          else if (di.cls === "overdue") meta += '<span class="over">' + di.label + "</span>";
+          else if (di.cls === "today") meta += '<span class="today">' + di.label + "</span>";
+          else meta += di.label;
+        } else if (t.done) meta += " · completado";
+        return '<div class="row' + (t.done ? " done" : "") + '" data-id="' + t.id + '">' +
+          '<span class="sw ' + t.urgency + '"></span>' +
+          '<div class="body"><div class="t">' + esc(t.title) + "</div>" +
+          '<div class="meta">' + meta + "</div>" +
+          (t.note ? '<div class="meta">' + esc(t.note) + "</div>" : "") + "</div>" +
+          '<div class="acts">' +
+            '<button type="button" class="icon-btn done-btn" data-act="toggle">' + (t.done ? "Reabrir" : "Hecho") + "</button>" +
+            '<button type="button" class="icon-btn" data-act="edit">Editar</button>' +
+            '<button type="button" class="icon-btn del" data-act="del">Borrar</button>' +
+          "</div></div>";
+      }
       function renderAdmin() {
         var list = document.getElementById("adminList");
         var sorted = sortTasks(tasks);
@@ -633,26 +824,24 @@
           tasks.filter(function (t) { return !t.done; }).length + " activos · " +
           tasks.filter(function (t) { return t.done; }).length + " completados";
         document.getElementById("adminEmpty").hidden = tasks.length > 0;
-        list.innerHTML = sorted.map(function (t) {
-          var di = dueInfo(t.due);
-          var meta = "Urgencia " + URG_LABEL[t.urgency];
-          if (t.due) {
-            meta += " · " + fmtDate(t.due) + " · ";
-            if (t.done) meta += "completado";
-            else if (di.cls === "overdue") meta += '<span class="over">' + di.label + "</span>";
-            else if (di.cls === "today") meta += '<span class="today">' + di.label + "</span>";
-            else meta += di.label;
-          } else if (t.done) meta += " · completado";
-          return '<div class="row' + (t.done ? " done" : "") + '" data-id="' + t.id + '">' +
-            '<span class="sw ' + t.urgency + '"></span>' +
-            '<div class="body"><div class="t">' + esc(t.title) + "</div>" +
-            '<div class="meta">' + meta + "</div>" +
-            (t.note ? '<div class="meta">' + esc(t.note) + "</div>" : "") + "</div>" +
-            '<div class="acts">' +
-              '<button type="button" class="icon-btn done-btn" data-act="toggle">' + (t.done ? "Reabrir" : "Hecho") + "</button>" +
-              '<button type="button" class="icon-btn" data-act="edit">Editar</button>' +
-              '<button type="button" class="icon-btn del" data-act="del">Borrar</button>' +
-            "</div></div>";
+        var curKey = currentMonthKey();
+        var groups = groupByMonth(sorted);
+        /* Si solo hay un mes (o el tablero está vacío), sin encabezados: lista simple */
+        if (groups.length <= 1) {
+          list.innerHTML = sorted.map(adminRowHTML).join("");
+          return;
+        }
+        list.innerHTML = groups.map(function (g) {
+          var act = g.items.filter(function (t) { return !t.done; }).length;
+          var dn = g.items.filter(function (t) { return t.done; }).length;
+          var gOver = g.items.filter(function (t) { return !t.done && dueInfo(t.due).days !== null && dueInfo(t.due).days < 0; }).length;
+          var parts = [];
+          parts.push(act + (act === 1 ? " activo" : " activos"));
+          if (dn) parts.push(dn + (dn === 1 ? " completado" : " completados"));
+          if (gOver) parts.push('<span class="over">' + gOver + (gOver === 1 ? " vencido" : " vencidos") + "</span>");
+          var isCurrent = g.key === curKey;
+          return '<div class="admin-month-head' + (isCurrent ? " is-current" : "") + '"><h3>' + esc(g.label) + '</h3><span>' + parts.join(" · ") + (isCurrent ? " · mes actual" : "") + "</span></div>" +
+            g.items.map(adminRowHTML).join("");
         }).join("");
       }
       function render() { renderExpo(); renderAdmin(); }
@@ -728,7 +917,6 @@
           if (pinEntry === adminPin) {
             unlocked = true; pinEntry = "";
             refreshGate();
-            loadTokenFromFile();
             toast("Panel de administrador desbloqueado");
             document.getElementById("fTitle").focus();
           } else {
@@ -894,42 +1082,15 @@
       function forgetGhToken() {
         try { localStorage.removeItem(GH_STORE_KEY); } catch (err) { /* sin almacenamiento */ }
         document.getElementById("ghToken").value = "";
-        tokenFromFile = false;
-        suppressFileToken = true; /* en esta sesión no volver a leer token.ddg */
-        ghStatus("Token borrado de este navegador. Pega uno nuevo cuando quieras volver a subir al repo. Si tienes un token.ddg junto a la página, bórralo también o volverá a cargarse en la próxima visita.");
+        ghStatus("Token borrado de este navegador. Pega uno nuevo cuando quieras volver a subir al repo.");
         toast("Token guardado eliminado de este navegador");
       }
-      /* ---------- Token desde el archivo token.ddg ----------
-         Al entrar al admin, la página busca un archivo token.ddg junto
-         al index.html. Si existe y su contenido tiene forma de token de
-         GitHub, lo usa sin pedirlo y lo guarda en este navegador. Si no
-         existe o está vacío, se usa el token guardado en el dispositivo
-         o se pide pegarlo a mano. El archivo lo crea Tony aparte: aquí
-         no hay ningún token escrito en el código. */
-      var tokenFromFile = false;
-      var tokenFileLoading = false;
-      var suppressFileToken = false;
-      function looksLikeToken(s) {
-        return /^(github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,})$/.test(s);
-      }
-      function loadTokenFromFile() {
-        if (tokenFromFile || tokenFileLoading || suppressFileToken || !window.fetch) return;
-        tokenFileLoading = true;
-        fetch("token.ddg?t=" + Date.now(), { cache: "no-store" }).then(function (res) {
-          if (!res.ok) throw new Error("sin archivo");
-          return res.text();
-        }).then(function (text) {
-          var tok = (text || "").trim().split(/\s+/)[0] || "";
-          if (!looksLikeToken(tok)) return; /* vacío o sin forma de token: se ignora */
-          document.getElementById("ghToken").value = tok;
-          document.getElementById("ghToken").classList.remove("missing");
-          tokenFromFile = true;
-          saveGhConfig();
-          ghStatus("Token cargado desde el archivo token.ddg junto a la página. No necesitas pegarlo.", "ok");
-        }).catch(function () {
-          /* Sin token.ddg: se usa el guardado en el dispositivo o el manual */
-        }).then(function () { tokenFileLoading = false; });
-      }
+      /* El token nunca se carga desde un archivo compartido ni desde el
+         repo: cualquier enlace en el código público permitiría a cualquiera
+         descargar el token sin PIN y escribir en el repo. Solo se pega a
+         mano en el admin y queda guardado en el navegador de este
+         dispositivo. Guardarlo una sola vez para todos los dispositivos
+         requiere una versión con servidor que lo oculte del cliente. */
       function ghStatus(msg, cls) {
         var el = document.getElementById("ghStatus");
         el.textContent = msg;
@@ -1125,15 +1286,45 @@
       if (loadGhConfig()) {
         ghStatus("Token cargado desde este navegador (guardado de una visita anterior). Si venció, pega el nuevo y se guarda en su lugar.", "ok");
       }
-      loadTokenFromFile();
 
-      /* ---------- Carga desde pendientes.json del repo ----------
-         El pendientes.json junto al index.html (el que sube el botón de
-         guardado) manda en todos los dispositivos. Se revisa al abrir y
-         cada 60 s, para que la exposición refleje las subidas sin que
-         nadie tenga que recargar. No hay pendientes de ejemplo: si no
-         hay archivo, o el archivo es una lista vacía [], el tablero
-         queda vacío y solo muestra los pendientes agregados reales. */
+      /* ---------- Carga vinculada a GitHub ----------
+         Esta copia (espacio de trabajo) y la de GitHub Pages son el
+         MISMO tablero: ambas leen y escriben el pendientes.json del
+         repo TonyMoronyMuse/PendientesDDG. Al abrir y cada 60 s se
+         lee en vivo desde GitHub Pages; si tarda en propagar, se lee
+         el contenido crudo del repo (raw.githubusercontent.com), y
+         como último recurso el pendientes.json junto a esta página.
+         Así, un cambio hecho en la plataforma de GitHub aparece aquí
+         solo, y lo que se suba desde aquí con «Guardar y subir al
+         repo» aparece en GitHub Pages. No hay pendientes de ejemplo:
+         si el archivo es una lista vacía [], el tablero queda vacío. */
+      var lastSyncAt = null;
+      var syncBusy = false;
+      function ghDataUrls() {
+        var cfg = ghConfig();
+        var urls = [];
+        if (cfg.owner && cfg.repo) {
+          urls.push({ label: "GitHub Pages", url: "https://" + cfg.owner.toLowerCase() + ".github.io/" + cfg.repo + "/pendientes.json" });
+          urls.push({ label: "repo de GitHub", url: "https://raw.githubusercontent.com/" + cfg.owner + "/" + cfg.repo + "/" + (cfg.branch || "main") + "/pendientes.json" });
+        }
+        urls.push({ label: "archivo local", url: "pendientes.json" });
+        return urls;
+      }
+      function setSync(state, msg) {
+        var bar = document.getElementById("syncBar");
+        var txt = document.getElementById("syncText");
+        if (!bar || !txt) return;
+        bar.classList.toggle("live", state === "live");
+        bar.classList.toggle("error", state === "error");
+        txt.innerHTML = msg;
+      }
+      function fetchBoardFrom(urls, idx) {
+        if (idx >= urls.length) return Promise.reject(new Error("sin fuente"));
+        return fetch(urls[idx].url + "?t=" + Date.now(), { cache: "no-store" }).then(function (res) {
+          if (!res.ok) throw new Error("sin archivo");
+          return res.json().then(function (data) { return { data: data, source: urls[idx].label }; });
+        }).catch(function () { return fetchBoardFrom(urls, idx + 1); });
+      }
       function parseBoard(arr) {
         if (!Array.isArray(arr)) return null;
         var clean = [];
@@ -1145,16 +1336,18 @@
         });
         return clean;
       }
-      function loadFromRepo() {
+      function loadFromRepo(manual) {
         if (!window.fetch) { firstLoadPending = false; render(); return; }
-        fetch("pendientes.json?t=" + Date.now(), { cache: "no-store" }).then(function (res) {
-          if (!res.ok) throw new Error("sin archivo");
-          return res.json();
-        }).then(function (arr) {
-          var clean = parseBoard(arr);
+        if (syncBusy) return;
+        syncBusy = true;
+        if (firstLoadPending) setSync("", "<strong>Vinculado a GitHub:</strong> conectando con TonyMoronyMuse/PendientesDDG…");
+        fetchBoardFrom(ghDataUrls(), 0).then(function (got) {
+          var clean = parseBoard(got.data);
           firstLoadPending = false;
+          lastSyncAt = new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+          setSync("live", "<strong>Vinculado a GitHub:</strong> sincronizado desde " + esc(got.source) + " a las " + lastSyncAt + " · se revisa cada minuto.");
           if (!clean) { render(); return; } /* incluye [] válido: tablero vacío, sin ejemplos */
-          if (dirty || editingId) { render(); return; } /* no pisar cambios del admin sin subir */
+          if (dirty || editingId) { if (manual) toast("Tienes cambios sin subir: no se sobrescriben con lo de GitHub"); render(); return; } /* no pisar cambios del admin sin subir */
           if (lastUploadTs && Date.now() - lastUploadTs < 180000) { render(); return; } /* Pages aún puede servir la versión anterior tras subir */
           var incoming = JSON.stringify(clean.map(function (t) {
             return { titulo: t.title, detalle: t.note, urgencia: t.urgency, fechaLimite: t.due, completado: t.done };
@@ -1165,14 +1358,17 @@
           dirty = false;
           render();
           updateSaveBar();
+          if (manual) toast("Tablero actualizado desde GitHub");
         }).catch(function () {
-          /* Sin pendientes.json accesible: tablero vacío, nunca ejemplos */
+          /* Sin pendientes.json accesible en ninguna fuente: tablero vacío, nunca ejemplos */
           firstLoadPending = false;
+          setSync("error", "<strong>Vinculado a GitHub:</strong> no se pudo leer el tablero del repo. Se reintenta en un minuto.");
           render();
-        });
+        }).then(function () { syncBusy = false; });
       }
+      document.getElementById("btnSyncNow").addEventListener("click", function () { loadFromRepo(true); });
       loadFromRepo();
-      setInterval(loadFromRepo, 60000);
+      setInterval(function () { loadFromRepo(); }, 60000);
     </script>
   </body>
 </html>
